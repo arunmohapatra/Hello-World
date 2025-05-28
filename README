@@ -58,3 +58,13 @@ Apply GenAI in real-world cloud infrastructure automation
 Improve developer experience by abstracting DevOps complexity
 Collaborate across teams with standardized, AI-generated workflows
 Position yourself at the intersection of AI and cloud-native engineering
+
+
+
+LLMs (Large Language Models) to convert natural language prompts into deployment and infrastructure code.
+
+Kubernetes & Terraform for automating app deployments and cloud infrastructure provisioning.
+
+CI/CD Integration using tools like GitHub Actions and ArgoCD for pipeline execution.
+
+AI-Powered Remediation Loop for error analysis, suggestions, and automated fixes.

@@ -1,3 +1,25 @@
+Harness has introduced the Model Context Protocol (MCP) Server, a lightweight, 
+open-source gateway designed to bridge AI agents with Harness workflows securely and efficiently. By implementing the open standard Model Context Protocol, 
+the MCP Server enables AI tools to interact with Harness services through a consistent and structured interface
+Benefits of Using the Harness MCP Server
+---------------------------------------
+Seamless AI Integration: The MCP Server allows AI agents—such as Claude Desktop, 
+Windsurf, Cursor, or custom-built tools—to connect with Harness workflows without the need for custom APIs or brittle integrations. 
+This facilitates smoother and more reliable interactions between AI tools and the software delivery lifecycle.
+
+Secure Access to Delivery Data: By running within your environment, 
+the MCP Server ensures that AI agents can access sensitive delivery data—like pipeline information, environment configurations, 
+and logs—securely. This local deployment model maintains data privacy and compliance with organizational security policies
+
+Enhanced Developer Experience: Developers can leverage AI capabilities more effectively, 
+as the MCP Server provides a straightforward way to incorporate AI-driven insights and actions into existing workflows. 
+This integration supports improved productivity and smarter decision-making throughout the software delivery process
+
+Standardized Communication Protocol: By adhering to the Model Context Protocol, the MCP Server promotes a standardized 
+method for AI agents to communicate with developer services. 
+This consistency reduces complexity and fosters interoperability across different tools and platforms.
+----
+
 The MCP Server operates as a local intermediary between AI agents and the Harness Control Plane. 
 It translates AI-generated requests into actions that the Harness platform can execute, such as initiating deployments, retrieving logs, 
 or managing environments. This translation ensures that AI agents can interact with Harness services in a structured and secure manner, 

@@ -1,60 +1,14 @@
-Harness has introduced the Model Context Protocol (MCP) Server, a lightweight, 
-open-source gateway designed to bridge AI agents with Harness workflows securely and efficiently. By implementing the open standard Model Context Protocol, 
-the MCP Server enables AI tools to interact with Harness services through a consistent and structured interface
-Benefits of Using the Harness MCP Server
----------------------------------------
-Seamless AI Integration: The MCP Server allows AI agents—such as Claude Desktop, 
-Windsurf, Cursor, or custom-built tools—to connect with Harness workflows without the need for custom APIs or brittle integrations. 
-This facilitates smoother and more reliable interactions between AI tools and the software delivery lifecycle.
+MCP Server for Spinnaker:
+Setting up an MCP server involves creating an HTTP interface that translates standardized MCP 
+requests into Spinnaker API calls. This enables AI agents to securely and efficiently interact 
+with Spinnaker pipelines and workflows. Key tasks include mapping MCP contexts and intents to 
+Spinnaker operations, handling authentication, enforcing validation and guardrails, 
+and ensuring comprehensive logging and observability. Challenges include managing 
+Spinnaker’s API complexity, maintaining security, keeping up with evolving MCP standards, 
+and enabling effective debugging.
 
-Secure Access to Delivery Data: By running within your environment, 
-the MCP Server ensures that AI agents can access sensitive delivery data—like pipeline information, environment configurations, 
-and logs—securely. This local deployment model maintains data privacy and compliance with organizational security policies
-
-Enhanced Developer Experience: Developers can leverage AI capabilities more effectively, 
-as the MCP Server provides a straightforward way to incorporate AI-driven insights and actions into existing workflows. 
-This integration supports improved productivity and smarter decision-making throughout the software delivery process
-
-Standardized Communication Protocol: By adhering to the Model Context Protocol, the MCP Server promotes a standardized 
-method for AI agents to communicate with developer services. 
-This consistency reduces complexity and fosters interoperability across different tools and platforms.
-----
-
-The MCP Server operates as a local intermediary between AI agents and the Harness Control Plane. 
-It translates AI-generated requests into actions that the Harness platform can execute, such as initiating deployments, retrieving logs, 
-or managing environments. This translation ensures that AI agents can interact with Harness services in a structured and secure manner, 
-without direct exposure to the control plane's internal APIs. By handling these interactions locally, the MCP Server maintains the integrity 
-and security of the communication between AI tools and the Harness platform. 
-In summary, the Harness MCP Server offers a robust solution for integrating AI agents into the software delivery lifecycle, 
-enhancing automation, security, and developer efficiency.
-
-
-Here are the possible drawbacks of the Harness MCP Server approach in one-liners:
-
-Adds operational overhead for setup, maintenance, and upgrades.
-
-Increases security risks if AI agents access sensitive data without strict controls.
-
-Introduces latency due to the extra communication layer.
-
-Reduces debugging clarity with complex AI-generated actions.
-
-AI agent unpredictability can trigger unintended or unsafe operations.
-
-Risk of protocol changes since MCP is still evolving.
-
-Creates AI dependency, reducing human oversight in critical workflows.
-
-
-As of May 2025, the Harness Model Context Protocol (MCP) Server is in beta and available to customers for integration with their AI agents. 
-This means that while it's accessible, it may not yet be fully supported across all Harness account tiers or environments.
-
-The MCP Server is designed to provide a standardized, 
-secure interface for AI agents to interact with Harness services such as pipelines, repositories, logs, and artifact registries. 
-By adhering to the open Model Context Protocol, it facilitates seamless integration without the need for custom adapters or complex authentication flows
-
-To determine if your specific Harness account has access to the MCP Server beta, 
-it's recommended to consult the official Harness documentation or contact your Harness support representative for detailed information.
-
-If you need assistance with setting up the MCP Server or have further questions about its capabilities, feel free to ask!
-
+MCP Protocol Pros and Cons:
+The MCP protocol offers a standardized, language-agnostic way for AI agents to 
+communicate with diverse systems via intent-context modeling, facilitating flexible integrations 
+with minimal custom adapters. However, it is still an emerging standard with limited tooling and adoption, 
+which may introduce instability and extra development effort during early implementation.

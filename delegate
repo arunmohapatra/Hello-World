@@ -1,0 +1,24 @@
+# Stage 1: Base Harness Delegate
+FROM harness/delegate:25.01.84800 as base
+
+# Stage 2: Final Image with custom certs
+FROM base
+
+# Set environment variable for Harness delegate startup script
+ENV SHARED_CA_CERTS_PATH=/opt/harness_delegate/custom-certs
+
+# Copy your prebuilt cacerts truststore (customized with your internal CAs)
+COPY cacerts /opt/java/openjdk/lib/security/cacerts
+
+# Copy all your custom root/intermediate certs to the shared certs path
+COPY root-certs/*.cert /opt/harness_delegate/custom-certs/
+
+# Make sure permissions are safe
+RUN chmod 644 /opt/harness_delegate/custom-certs/*.cert && \
+    chmod 644 /opt/java/openjdk/lib/security/cacerts
+
+# Optionally verify certs exist
+RUN ls -l /opt/harness_delegate/custom-certs && \
+    keytool -list -keystore /opt/java/openjdk/lib/security/cacerts -storepass changeit | head -n 20
+
+# Let the default entrypoint take over and load certs via load_certificates.sh

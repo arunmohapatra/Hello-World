@@ -12,3 +12,23 @@ The MCP protocol offers a standardized, language-agnostic way for AI agents to
 communicate with diverse systems via intent-context modeling, facilitating flexible integrations 
 with minimal custom adapters. However, it is still an emerging standard with limited tooling and adoption, 
 which may introduce instability and extra development effort during early implementation.
+
+
+
+-------------------------
+Save the above YAML into a file, e.g. delegate-configmap.yaml.
+
+Apply it to your EKS cluster:
+  kubectl apply -f delegate-configmap.yaml
+Mount it in your delegate Deployment so that it’s available at:
+  /opt/harness-delegate/config/delegate-config.yaml
+Example snippet for Deployment (delegate pod spec):
+          volumeMounts:
+        - name: delegate-config
+          mountPath: /opt/harness-delegate/config/delegate-config.yaml
+          subPath: delegate-config.yaml
+      volumes:
+      - name: delegate-config
+        configMap:
+          name: delegate-config
+

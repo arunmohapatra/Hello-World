@@ -32,3 +32,31 @@ Example snippet for Deployment (delegate pod spec):
         configMap:
           name: delegate-config
 
+----------------------
+Here are the top 5 key features Harness supports for Continuous Delivery/DevOps:
+
+1. Continuous Delivery (CD) with Smart Automation
+
+  Automates deployments across Kubernetes, ECS, EKS, EC2, and other platforms.
+  Supports advanced deployment strategies like Blue/Green, Canary, and Rolling.
+
+2. Built-in CI/CD Pipelines with GitOps
+
+  Native integration for CI and CD in one platform.
+  GitOps support for managing deployments declaratively via Git repos.
+
+3. Feature Flags
+
+  Toggle features on/off without redeploying code.  
+  Enables progressive rollouts and safe experimentation.
+
+4. Cloud Cost Management (CCM)
+
+  Provides visibility into cloud spend across AWS, Azure, and GCP.
+  Suggests optimizations and governance to reduce costs.
+
+5. Governance, Security, and Compliance
+
+  OPA-based policy enforcement.
+  Role-based access control (RBAC) and SSO with SAML/OIDC.
+  Audit trails for all deployment and pipeline activities.

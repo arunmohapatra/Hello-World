@@ -55,6 +55,14 @@ Here are the top 5 key features Harness supports for Continuous Delivery/DevOps:
   Provides visibility into cloud spend across AWS, Azure, and GCP.
   Suggests optimizations and governance to reduce costs.
 
+
+
+Could you please provide more details on how pipeline metadata is stored and encrypted within Harness? Specifically, we’d like to understand where the metadata is stored (e.g., Harness-managed database, GCP/AWS storage, etc.), the encryption mechanisms in place, key management practices, and where the encryption keys are stored.
+
+Does Harness support TLS 1.3 for all internal and external communications (e.g., between delegate, Harness SaaS services, and external integrations)? If yes, could you confirm whether it is enforced by default or configurable?
+
+Is there an option for customers to use customer-managed encryption keys (CMKs) for pipeline metadata encryption, instead of relying solely on Harness-managed keys? If yes, please share details on how this can be configured and managed.
+
 5. Governance, Security, and Compliance
 
   OPA-based policy enforcement.

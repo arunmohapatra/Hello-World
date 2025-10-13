@@ -68,3 +68,102 @@ Is there an option for customers to use customer-managed encryption keys (CMKs) 
   OPA-based policy enforcement.
   Role-based access control (RBAC) and SSO with SAML/OIDC.
   Audit trails for all deployment and pipeline activities.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Operation Category	Tasks	Frequency	Responsibility
+Cluster Maintenance	- Monitor node health and autoscaling.
+- Apply EKS/Kubernetes version upgrades (minor every 3–6 months).
+- Patch worker node AMIs.	Monthly / Quarterly	Infra team
+
+Harness Application Lifecycle	- Monitor Harness pod health (Manager, Gateway, UI, etc.).
+- Apply SMP Helm chart upgrades.
+- Validate ingress and service routes.	Monthly / during release	Infra + DevOps
+
+Ingress / Load Balancing	- Validate ALB ingress health.
+- Rotate TLS certificates (ACM-managed).	Monthly / before expiry	Infra
+
+Config & Secret Management	- Rotate credentials (DB, Redis, S3).
+- Sync with AWS Secrets Manager or Kubernetes Secrets.	Quarterly / as per policy	Infra
+
+Database Connectivity	- Validate external DB endpoints (RDS, DocumentDB).
+- Monitor DB connection pool usage.	Weekly	Infra
+
+Backup & Restore Validation	- Ensure RDS and S3 backups are working.
+- Perform quarterly restore tests.	Monthly / Quarterly	Infra
+
+Monitoring & Logging	- Setup CloudWatch / Prometheus + Grafana dashboards.
+- Log aggregation via CloudWatch or Loki.	Continuous	Infra
+
+Security & Compliance	- IAM role and service account audits.
+- Image vulnerability scans.
+- Network policy enforcement.	Monthly	Security / Infra
+
+Cost Optimization	- Review EKS node utilization.
+- Right-size instance types.
+- Evaluate S3 storage class transitions.	Monthly	Infra / FinOps
+
+==================================================================================
+
+Operation Category	Tasks	Frequency	Responsibility
+Cluster Management	- Maintain EKS node groups for delegates.
+- Scale based on deployment workload (100 parallel deployments).	Continuous / Weekly	Infra
+
+Delegate Lifecycle	- Upgrade delegate images (align with SMP version).
+- Rotate delegate tokens and secrets.	Monthly	Infra + DevOps
+
+Networking & Outbound Access	- Validate outbound connectivity via CloudEdge or proxy.
+- Maintain least-privilege IAM roles (IRSA).	Monthly	Infra / Security
+
+Pod & Job Execution Monitoring	- Ensure delegate pods can handle concurrent pipelines.
+- Monitor pod restarts, memory, CPU saturation.	Weekly	Infra
+
+Security Controls	- Enforce namespace isolation for different projects.
+- Scan delegate base images for CVEs.	Monthly	Security / Infra
+
+Autoscaling	- Configure HPA / Cluster Autoscaler for delegate workload bursts.
+- Review CloudWatch metrics for scaling thresholds.	Continuous	Infra
+
+Resource Quota Management	- Define per-project resource quotas to prevent noisy neighbors.	Monthly	Infra
+Cost Review	- Evaluate node group sizes and spot instance usage for delegates.
+
+
+===========================================================================================
+Service	Operational Tasks	Frequency	Responsibility
+Amazon RDS (PostgreSQL)	- Monitor CPU, memory, IOPS.
+- Backup via AWS Backup.
+- Apply minor version upgrades.	Weekly / Monthly	Infra
+
+Amazon DocumentDB (MongoDB)	- Monitor replica lag and connections.
+- Apply patch versions.	Monthly	Infra
+
+Amazon ElastiCache (Redis)	- Monitor memory and eviction policies.
+- Rotate Redis auth tokens.	Weekly / Monthly	Infra
+
+Amazon S3	- Verify bucket lifecycle policies and access logs.
+- Audit IAM access.	Monthly	Infra / Security
+
+Amazon Secrets Manager	- Rotate credentials automatically.
+- Sync to Kubernetes Secrets if needed.	Monthly	Infra
+
+CloudWatch / Grafana	- Monitor logs, metrics, alerting thresholds.	Continuous	Infra
+AWS Backup	- Validate restore points and test recoveries.	Quarterly	Infra
+
+
+
+
+
+

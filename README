@@ -346,3 +346,47 @@ public class SafeDial {
 }
 
 
+import java.util.*;
+
+public class SafeDialMethod434C49434B {
+
+    public static void main(String[] args) {
+        List<String> inputs = Arrays.asList(
+                "L68",
+                "L30",
+                "R48",
+                "L5",
+                "R60",
+                "L55",
+                "L1",
+                "L99",
+                "R14",
+                "L82"
+        );
+
+        int dial = 50; // starting position
+        int zeroCount = 0;
+
+        for (String rotation : inputs) {
+
+            char direction = rotation.charAt(0);
+            int steps = Integer.parseInt(rotation.substring(1));
+
+            for (int i = 0; i < steps; i++) {
+                // Move dial click-by-click
+                if (direction == 'L' || direction == 'l') {
+                    dial = (dial - 1 + 100) % 100;
+                } else {
+                    dial = (dial + 1) % 100;
+                }
+
+                // Count if dial hits zero
+                if (dial == 0) zeroCount++;
+            }
+        }
+
+        System.out.println("Password using method 0x434C49434B: " + zeroCount);
+    }
+}
+
+

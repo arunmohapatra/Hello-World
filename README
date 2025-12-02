@@ -300,5 +300,49 @@ public class InvalidIDSum {
     }
 }
 
+import java.util.*;
+
+public class SafeDial {
+
+    public static void main(String[] args) {
+        List<String> inputs = Arrays.asList(
+                "L68",
+                "L30",
+                "R48",
+                "L5",
+                "R60",
+                "L55",
+                "L1",
+                "L99",
+                "R14",
+                "L82"
+        );
+
+        int dial = 50;   // Starting point
+        int zeroCount = 0;
+
+        for (String rotation : inputs) {
+            char direction = rotation.charAt(0);
+            int value = Integer.parseInt(rotation.substring(1));
+
+            if (direction == 'L' || direction == 'l') {
+                dial = (dial - value) % 100;
+                if (dial < 0) dial += 100; // wrap around backward
+            } else if (direction == 'R' || direction == 'r') {
+                dial = (dial + value) % 100; // wrap around forward
+            } else {
+                System.out.println("Invalid instruction: " + rotation);
+                continue;
+            }
+
+            // Check if dial points to 0
+            if (dial == 0) {
+                zeroCount++;
+            }
+        }
+
+        System.out.println("Password (times dial was 0): " + zeroCount);
+    }
+}
 
 

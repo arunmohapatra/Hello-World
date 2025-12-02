@@ -221,7 +221,84 @@ public class Day2 {
     }
 }
 
+======================
+public class InvalidIDSum {
 
+    public static void main(String[] args) {
+        String input = "1-14,46452718-46482242,16-35";
+        long result = sumInvalidIDs(input);
+        System.out.println("Sum of Invalid IDs = " + result);
+    }
+
+    // Process all ranges
+    public static long sumInvalidIDs(String input) {
+        long totalSum = 0;
+
+        String[] ranges = input.split(",");
+
+        for (String range : ranges) {
+            String[] parts = range.trim().split("-");
+            long start = Long.parseLong(parts[0]);
+            long end = Long.parseLong(parts[1]);
+
+            totalSum += sumInvalidIDsInRange(start, end);
+        }
+
+        return totalSum;
+    }
+
+    // Sum invalid IDs in a single range
+    public static long sumInvalidIDsInRange(long start, long end) {
+        long sum = 0;
+
+        for (long n = start; n <= end; n++) {
+            if (isInvalidID(n)) {
+                sum += n;
+            }
+        }
+
+        return sum;
+    }
+
+    /**
+     * NEW RULE:
+     * A number is invalid if its digit string is composed of
+     * a smaller substring repeated at least twice.
+     *
+     * For example:
+     * 999            -> "9" repeated 3 times
+     * 1010           -> "10" repeated 2 times
+     * 123123123      -> "123" repeated 3 times
+     * 1111111        -> "1" repeated 7 times
+     * 2121212121     -> "21" repeated 5 times
+     */
+    public static boolean isInvalidID(long n) {
+        String s = Long.toString(n);
+        int len = s.length();
+
+        // Try all possible substring lengths
+        for (int subLen = 1; subLen <= len / 2; subLen++) {
+
+            // total length must be divisible by substring length
+            if (len % subLen != 0) continue;
+
+            String pattern = s.substring(0, subLen);
+            int repeatCount = len / subLen;
+
+            // Build the repeated string
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < repeatCount; i++) {
+                sb.append(pattern);
+            }
+
+            if (sb.toString().equals(s) && repeatCount >= 2) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
 
 
 

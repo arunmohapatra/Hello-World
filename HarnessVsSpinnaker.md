@@ -69,3 +69,65 @@ Supply Chain Security (SSCA)
 Simple canary/blue-green support
 
 Unified platform beyond CD
+
+
+
+package com.bigcompany.hierarchy;
+
+public class Day2 {
+    public static void main(String[] args) {
+        String input = "1-14,46452718-46482242,16-35";
+
+        long result = sumInvalidIDs(input);
+        System.out.println("Sum of Invalid IDs = " + result);
+    }
+
+    public static long sumInvalidIDs(String input) {
+        long totalSum = 0;
+
+        // split ranges by comma
+        String[] ranges = input.split(",");
+
+        for (String range : ranges) {
+            String[] parts = range.trim().split("-");
+
+            long start = Long.parseLong(parts[0]);
+            long end = Long.parseLong(parts[1]);
+
+            totalSum += sumInvalidIDsInRange(start, end);
+        }
+
+        return totalSum;
+    }
+
+    // Returns the sum of invalid IDs inside one range
+    public static long sumInvalidIDsInRange(long start, long end) {
+        long sum = 0;
+
+        for (long n = start; n <= end; n++) {
+            if (isInvalidID(n)) {
+                sum += n;
+            }
+        }
+
+        return sum;
+    }
+
+    // Invalid ID rule:
+    // Even number of digits AND first half == second half
+    public static boolean isInvalidID(long n) {
+        String s = Long.toString(n);
+
+        if (s.length() % 2 != 0) {
+            return false;  // must have even digit count
+        }
+
+        int half = s.length() / 2;
+        String first = s.substring(0, half);
+        String second = s.substring(half);
+
+        return first.equals(second);
+    }
+}
+
+

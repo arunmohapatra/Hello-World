@@ -389,4 +389,52 @@ public class SafeDialMethod434C49434B {
     }
 }
 
+======================================================================
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class MaxJoltageCalculator {
+
+    public static void main(String[] args) {
+        String filePath = "input.txt";  // <-- replace with your file path
+
+        long totalOutput = 0;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                int maxJoltage = getMaxJoltage(line);
+                totalOutput += maxJoltage;
+                System.out.println(line + " -> " + maxJoltage);
+            }
+
+            System.out.println("Total Output Joltage = " + totalOutput);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Extracts the two largest digits and forms the largest two-digit number
+    private static int getMaxJoltage(String digits) {
+        int max1 = -1, max2 = -1;
+
+        for (char c : digits.toCharArray()) {
+            int d = c - '0';
+
+            if (d > max1) {
+                max2 = max1;
+                max1 = d;
+            } else if (d > max2) {
+                max2 = d;
+            }
+        }
+
+        return max1 * 10 + max2;  // largest 2-digit number
+    }
+}
+
+
 

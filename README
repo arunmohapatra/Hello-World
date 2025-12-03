@@ -42,3 +42,61 @@ public class MaxJoltageCalculator {
         return max;
     }
 }
+
+
+============
+
+private static final int K = 12;  // we must select exactly 12 digits
+
+    public static void main(String[] args) {
+        String filePath = "input.txt";  // change as needed
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            long total = 0;
+
+            while ((line = br.readLine()) != null) {
+                String result = maxSubsequenceOfLengthK(line, K);
+                System.out.println(line + " -> " + result);
+                total += Long.parseLong(result);
+            }
+
+            System.out.println("Total Output Joltage = " + total);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Returns largest subsequence of exact length K, preserving order
+    private static String maxSubsequenceOfLengthK(String s, int k) {
+        int n = s.length();
+        StringBuilder result = new StringBuilder();
+
+        int start = 0;  // where we can start searching
+
+        for (int remaining = k; remaining > 0; remaining--) {
+
+            // We must leave enough characters after choosing the next one
+            int end = n - remaining;
+
+            // Pick max digit from s[start...end]
+            char maxDigit = '0';
+            int maxIndex = start;
+
+            for (int i = start; i <= end; i++) {
+                if (s.charAt(i) > maxDigit) {
+                    maxDigit = s.charAt(i);
+                    maxIndex = i;
+
+                    // Optimization: If we find '9', can't get bigger
+                    if (maxDigit == '9') break;
+                }
+            }
+
+            result.append(maxDigit);
+            start = maxIndex + 1;
+        }
+
+        return result.toString();
+    }

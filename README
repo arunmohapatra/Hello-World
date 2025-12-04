@@ -6,7 +6,7 @@ public class AccessibleRolls {
 
     public static void main(String[] args) {
 
-        String filePath = "input.txt";   // Fixed file name, no arguments needed
+        String filePath = "input.txt";  // fixed input source
         List<String> lines;
 
         try {
@@ -18,43 +18,57 @@ public class AccessibleRolls {
 
         int rows = lines.size();
         int cols = lines.get(0).length();
-
         char[][] grid = new char[rows][cols];
 
         for (int i = 0; i < rows; i++) {
             grid[i] = lines.get(i).toCharArray();
         }
 
-        int accessibleCount = 0;
+        int[] dx = {-1,-1,-1,0,0,1,1,1};
+        int[] dy = {-1,0,1,-1,1,-1,0,1};
 
-        // 8 directions
-        int[] dx = {-1, -1, -1, 0, 0, 1, 1, 1};
-        int[] dy = {-1, 0, 1, -1, 1, -1, 0, 1};
+        int totalRemoved = 0;
 
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
+        while (true) {
+            List<int[]> toRemove = new ArrayList<>();
 
-                if (grid[r][c] != '@') continue;
+            // Find all currently accessible rolls
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
 
-                int neighbourRolls = 0;
+                    if (grid[r][c] != '@') continue;
 
-                for (int k = 0; k < 8; k++) {
-                    int nr = r + dx[k];
-                    int nc = c + dy[k];
+                    int neighbours = 0;
 
-                    if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-                        if (grid[nr][nc] == '@') {
-                            neighbourRolls++;
+                    for (int k = 0; k < 8; k++) {
+                        int nr = r + dx[k];
+                        int nc = c + dy[k];
+
+                        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                            if (grid[nr][nc] == '@') {
+                                neighbours++;
+                            }
                         }
                     }
-                }
 
-                if (neighbourRolls < 4) {
-                    accessibleCount++;
+                    if (neighbours < 4) {
+                        toRemove.add(new int[]{r, c});
+                    }
                 }
             }
+
+            // If nothing can be removed → stop
+            if (toRemove.isEmpty()) break;
+
+            // Remove all accessible rolls
+            for (int[] pos : toRemove) {
+                int r = pos[0], c = pos[1];
+                grid[r][c] = '.';
+            }
+
+            totalRemoved += toRemove.size();
         }
 
-        System.out.println("Accessible rolls: " + accessibleCount);
+        System.out.println("Total rolls removed: " + totalRemoved);
     }
 }

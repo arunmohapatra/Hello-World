@@ -1,102 +1,60 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
 
-public class MaxJoltageCalculator {
+public class AccessibleRolls {
 
     public static void main(String[] args) {
-        String filePath = "input.txt"; // change to your actual file
 
-        long total = 0;
+        String filePath = "input.txt";   // Fixed file name, no arguments needed
+        List<String> lines;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                int value = maxTwoDigitInOrder(line);
-                total += value;
-                System.out.println(line + " -> " + value);
-            }
-            System.out.println("Total Output Joltage = " + total);
+        try {
+            lines = Files.readAllLines(Paths.get(filePath));
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error reading input.txt: " + e.getMessage());
+            return;
         }
-    }
 
-    // Find the largest 2-digit number formed by digits in order (i < j)
-    private static int maxTwoDigitInOrder(String s) {
-        int max = 0;
-        int n = s.length();
+        int rows = lines.size();
+        int cols = lines.get(0).length();
 
-        for (int i = 0; i < n - 1; i++) {
-            int first = s.charAt(i) - '0';
+        char[][] grid = new char[rows][cols];
 
-            for (int j = i + 1; j < n; j++) {
-                int second = s.charAt(j) - '0';
-                int value = first * 10 + second;
+        for (int i = 0; i < rows; i++) {
+            grid[i] = lines.get(i).toCharArray();
+        }
 
-                if (value > max) {
-                    max = value;
+        int accessibleCount = 0;
+
+        // 8 directions
+        int[] dx = {-1, -1, -1, 0, 0, 1, 1, 1};
+        int[] dy = {-1, 0, 1, -1, 1, -1, 0, 1};
+
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+
+                if (grid[r][c] != '@') continue;
+
+                int neighbourRolls = 0;
+
+                for (int k = 0; k < 8; k++) {
+                    int nr = r + dx[k];
+                    int nc = c + dy[k];
+
+                    if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                        if (grid[nr][nc] == '@') {
+                            neighbourRolls++;
+                        }
+                    }
+                }
+
+                if (neighbourRolls < 4) {
+                    accessibleCount++;
                 }
             }
         }
-        return max;
+
+        System.out.println("Accessible rolls: " + accessibleCount);
     }
 }
-
-
-============
-
-private static final int K = 12;  // we must select exactly 12 digits
-
-    public static void main(String[] args) {
-        String filePath = "input.txt";  // change as needed
-
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            long total = 0;
-
-            while ((line = br.readLine()) != null) {
-                String result = maxSubsequenceOfLengthK(line, K);
-                System.out.println(line + " -> " + result);
-                total += Long.parseLong(result);
-            }
-
-            System.out.println("Total Output Joltage = " + total);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Returns largest subsequence of exact length K, preserving order
-    private static String maxSubsequenceOfLengthK(String s, int k) {
-        int n = s.length();
-        StringBuilder result = new StringBuilder();
-
-        int start = 0;  // where we can start searching
-
-        for (int remaining = k; remaining > 0; remaining--) {
-
-            // We must leave enough characters after choosing the next one
-            int end = n - remaining;
-
-            // Pick max digit from s[start...end]
-            char maxDigit = '0';
-            int maxIndex = start;
-
-            for (int i = start; i <= end; i++) {
-                if (s.charAt(i) > maxDigit) {
-                    maxDigit = s.charAt(i);
-                    maxIndex = i;
-
-                    // Optimization: If we find '9', can't get bigger
-                    if (maxDigit == '9') break;
-                }
-            }
-
-            result.append(maxDigit);
-            start = maxIndex + 1;
-        }
-
-        return result.toString();
-    }

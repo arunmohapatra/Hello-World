@@ -53,4 +53,28 @@ public class FreshIngredientCounter {
             }
 
         } catch (IOException e) {
-            System.
+            System.out.println("Error reading file: " + filePath);
+            e.printStackTrace();
+            return;
+        }
+
+        int freshCount = 0;
+
+        for (BigInteger id : ingredientIds) {
+            if (isFresh(id, freshRanges)) {
+                freshCount++;
+            }
+        }
+
+        System.out.println("Total fresh ingredient IDs: " + freshCount);
+    }
+
+    private static boolean isFresh(BigInteger id, List<BigInteger[]> ranges) {
+        for (BigInteger[] range : ranges) {
+            if (id.compareTo(range[0]) >= 0 && id.compareTo(range[1]) <= 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+}

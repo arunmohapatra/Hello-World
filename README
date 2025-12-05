@@ -1,4 +1,5 @@
 import java.io.*;
+import java.math.BigInteger;
 import java.util.*;
 
 public class FreshIngredientCounter {
@@ -7,8 +8,8 @@ public class FreshIngredientCounter {
 
         String filePath = "I:\\input.txt";   // <-- your file location
 
-        List<long[]> freshRanges = new ArrayList<>();
-        List<Long> ingredientIds = new ArrayList<>();
+        List<BigInteger[]> freshRanges = new ArrayList<>();
+        List<BigInteger> ingredientIds = new ArrayList<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
 
@@ -16,59 +17,40 @@ public class FreshIngredientCounter {
             boolean readingRanges = true;
 
             while ((line = br.readLine()) != null) {
-                line = line.trim();
 
-                // Blank line separates ranges and ingredient IDs
+                // Remove all non-printable characters
+                line = line.replaceAll("[^0-9\\-]", "").trim();
+
                 if (line.isEmpty()) {
                     readingRanges = false;
                     continue;
                 }
 
                 if (readingRanges) {
-                    // Parse ranges like "3-5"
                     String[] parts = line.split("-");
 
+                    if (parts.length != 2) {
+                        System.out.println("Invalid range skipped: " + line);
+                        continue;
+                    }
+
                     try {
-                        long start = Long.parseLong(parts[0]);
-                        long end = Long.parseLong(parts[1]);
-                        freshRanges.add(new long[]{start, end});
-                    } catch (NumberFormatException ex) {
-                        System.out.println("Invalid range found and skipped: " + line);
+                        BigInteger start = new BigInteger(parts[0]);
+                        BigInteger end = new BigInteger(parts[1]);
+                        freshRanges.add(new BigInteger[]{start, end});
+                    } catch (Exception ex) {
+                        System.out.println("Invalid range skipped: " + line);
                     }
 
                 } else {
                     try {
-                        long id = Long.parseLong(line);
+                        BigInteger id = new BigInteger(line);
                         ingredientIds.add(id);
-                    } catch (NumberFormatException ex) {
-                        System.out.println("Invalid ingredient ID skipped: " + line);
+                    } catch (Exception ex) {
+                        System.out.println("Invalid ID skipped: " + line);
                     }
                 }
             }
 
         } catch (IOException e) {
-            System.out.println("Error reading file: " + filePath);
-            e.printStackTrace();
-            return;
-        }
-
-        int freshCount = 0;
-
-        for (long id : ingredientIds) {
-            if (isFresh(id, freshRanges)) {
-                freshCount++;
-            }
-        }
-
-        System.out.println("Total fresh ingredient IDs: " + freshCount);
-    }
-
-    private static boolean isFresh(long id, List<long[]> ranges) {
-        for (long[] range : ranges) {
-            if (id >= range[0] && id <= range[1]) {
-                return true;
-            }
-        }
-        return false;
-    }
-}
+            System.

@@ -1,74 +1,64 @@
 import java.io.*;
-import java.nio.file.*;
 import java.util.*;
 
-public class AccessibleRolls {
+public class FreshIngredientCounter {
 
     public static void main(String[] args) {
 
-        String filePath = "input.txt";  // fixed input source
-        List<String> lines;
+        String filePath = "I:\\input.txt";   // <-- your file location
 
-        try {
-            lines = Files.readAllLines(Paths.get(filePath));
-        } catch (IOException e) {
-            System.out.println("Error reading input.txt: " + e.getMessage());
-            return;
-        }
+        List<int[]> freshRanges = new ArrayList<>();
+        List<Integer> ingredientIds = new ArrayList<>();
 
-        int rows = lines.size();
-        int cols = lines.get(0).length();
-        char[][] grid = new char[rows][cols];
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
 
-        for (int i = 0; i < rows; i++) {
-            grid[i] = lines.get(i).toCharArray();
-        }
+            String line;
+            boolean readingRanges = true;
 
-        int[] dx = {-1,-1,-1,0,0,1,1,1};
-        int[] dy = {-1,0,1,-1,1,-1,0,1};
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
 
-        int totalRemoved = 0;
+                // Blank line separates ranges and ingredient IDs
+                if (line.isEmpty()) {
+                    readingRanges = false;
+                    continue;
+                }
 
-        while (true) {
-            List<int[]> toRemove = new ArrayList<>();
-
-            // Find all currently accessible rolls
-            for (int r = 0; r < rows; r++) {
-                for (int c = 0; c < cols; c++) {
-
-                    if (grid[r][c] != '@') continue;
-
-                    int neighbours = 0;
-
-                    for (int k = 0; k < 8; k++) {
-                        int nr = r + dx[k];
-                        int nc = c + dy[k];
-
-                        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-                            if (grid[nr][nc] == '@') {
-                                neighbours++;
-                            }
-                        }
-                    }
-
-                    if (neighbours < 4) {
-                        toRemove.add(new int[]{r, c});
-                    }
+                if (readingRanges) {
+                    // Parse ranges like "3-5"
+                    String[] parts = line.split("-");
+                    int start = Integer.parseInt(parts[0]);
+                    int end = Integer.parseInt(parts[1]);
+                    freshRanges.add(new int[]{start, end});
+                } else {
+                    // Parse ingredient ID
+                    ingredientIds.add(Integer.parseInt(line));
                 }
             }
 
-            // If nothing can be removed → stop
-            if (toRemove.isEmpty()) break;
-
-            // Remove all accessible rolls
-            for (int[] pos : toRemove) {
-                int r = pos[0], c = pos[1];
-                grid[r][c] = '.';
-            }
-
-            totalRemoved += toRemove.size();
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + filePath);
+            e.printStackTrace();
+            return;
         }
 
-        System.out.println("Total rolls removed: " + totalRemoved);
+        int freshCount = 0;
+
+        for (int id : ingredientIds) {
+            if (isFresh(id, freshRanges)) {
+                freshCount++;
+            }
+        }
+
+        System.out.println("Total fresh ingredient IDs: " + freshCount);
+    }
+
+    private static boolean isFresh(int id, List<int[]> ranges) {
+        for (int[] range : ranges) {
+            if (id >= range[0] && id <= range[1]) {
+                return true;
+            }
+        }
+        return false;
     }
 }

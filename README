@@ -7,8 +7,8 @@ public class FreshIngredientCounter {
 
         String filePath = "I:\\input.txt";   // <-- your file location
 
-        List<int[]> freshRanges = new ArrayList<>();
-        List<Integer> ingredientIds = new ArrayList<>();
+        List<long[]> freshRanges = new ArrayList<>();
+        List<Long> ingredientIds = new ArrayList<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
 
@@ -27,12 +27,22 @@ public class FreshIngredientCounter {
                 if (readingRanges) {
                     // Parse ranges like "3-5"
                     String[] parts = line.split("-");
-                    int start = Integer.parseInt(parts[0]);
-                    int end = Integer.parseInt(parts[1]);
-                    freshRanges.add(new int[]{start, end});
+
+                    try {
+                        long start = Long.parseLong(parts[0]);
+                        long end = Long.parseLong(parts[1]);
+                        freshRanges.add(new long[]{start, end});
+                    } catch (NumberFormatException ex) {
+                        System.out.println("Invalid range found and skipped: " + line);
+                    }
+
                 } else {
-                    // Parse ingredient ID
-                    ingredientIds.add(Integer.parseInt(line));
+                    try {
+                        long id = Long.parseLong(line);
+                        ingredientIds.add(id);
+                    } catch (NumberFormatException ex) {
+                        System.out.println("Invalid ingredient ID skipped: " + line);
+                    }
                 }
             }
 
@@ -44,7 +54,7 @@ public class FreshIngredientCounter {
 
         int freshCount = 0;
 
-        for (int id : ingredientIds) {
+        for (long id : ingredientIds) {
             if (isFresh(id, freshRanges)) {
                 freshCount++;
             }
@@ -53,8 +63,8 @@ public class FreshIngredientCounter {
         System.out.println("Total fresh ingredient IDs: " + freshCount);
     }
 
-    private static boolean isFresh(int id, List<int[]> ranges) {
-        for (int[] range : ranges) {
+    private static boolean isFresh(long id, List<long[]> ranges) {
+        for (long[] range : ranges) {
             if (id >= range[0] && id <= range[1]) {
                 return true;
             }

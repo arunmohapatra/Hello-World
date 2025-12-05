@@ -78,3 +78,82 @@ public class FreshIngredientCounter {
         return false;
     }
 }
+
+
+===================================================================
+import java.io.*;
+import java.math.BigInteger;
+import java.util.*;
+
+public class FreshIngredientCounterPart2 {
+
+    public static void main(String[] args) {
+
+        String filePath = "I:\\input.txt";   // Your input file
+
+        List<BigInteger[]> ranges = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+
+            String line;
+
+            while ((line = br.readLine()) != null) {
+
+                // Clean hidden characters
+                line = line.replaceAll("[^0-9\\-]", "").trim();
+
+                // Blank line = stop reading ranges
+                if (line.isEmpty()) {
+                    break;
+                }
+
+                // Parse ranges like 12-18
+                String[] parts = line.split("-");
+                if (parts.length != 2) continue;
+
+                try {
+                    BigInteger start = new BigInteger(parts[0]);
+                    BigInteger end = new BigInteger(parts[1]);
+                    ranges.add(new BigInteger[]{start, end});
+                } catch (Exception ex) {
+                    System.out.println("Invalid range skipped: " + line);
+                }
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + filePath);
+            return;
+        }
+
+        // Sort ranges by start value
+        ranges.sort(Comparator.comparing(a -> a[0]));
+
+        // Merge overlapping ranges
+        List<BigInteger[]> merged = new ArrayList<>();
+
+        for (BigInteger[] r : ranges) {
+            if (merged.isEmpty()) {
+                merged.add(r);
+            } else {
+                BigInteger[] last = merged.get(merged.size() - 1);
+
+                if (r[0].compareTo(last[1].add(BigInteger.ONE)) <= 0) {
+                    // Overlap → extend end
+                    last[1] = last[1].max(r[1]);
+                } else {
+                    merged.add(r);
+                }
+            }
+        }
+
+        // Count total fresh IDs = sum(rangeLength)
+        BigInteger totalFresh = BigInteger.ZERO;
+
+        for (BigInteger[] r : merged) {
+            BigInteger count = r[1].subtract(r[0]).add(BigInteger.ONE);
+            totalFresh = totalFresh.add(count);
+        }
+
+        System.out.println("Total ingredient IDs considered FRESH: " + totalFresh);
+    }
+}

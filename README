@@ -10,7 +10,7 @@ public class day6 {
         int rows = lines.size();
         int cols = lines.stream().mapToInt(String::length).max().orElse(0);
 
-        // Pad grid
+        // Build padded grid
         char[][] grid = new char[rows][cols];
         for (int r = 0; r < rows; r++) {
             String line = lines.get(r);
@@ -24,48 +24,47 @@ public class day6 {
 
         while (col < cols) {
 
-            // Skip blank columns
+            // Skip blank column separators
             if (isBlankColumn(grid, col)) {
                 col++;
                 continue;
             }
 
-            // Start of a problem block
+            // Start of problem block
             int start = col;
+            while (col < cols && !isBlankColumn(grid, col)) col++;
+            int end = col - 1; // inclusive
 
-            // Move until next blank column
-            while (col < cols && !isBlankColumn(grid, col)) {
-                col++;
-            }
-            int end = col - 1;
-
-            // Extract problem block as rows of text
-            // endRow = row with operator
+            // Find operator row for this block
             int operatorRow = findOperatorRow(grid, start, end);
-
             if (operatorRow == -1) {
-                throw new RuntimeException("Operator not found in block: " + start + "-" + end);
+                throw new RuntimeException("Operator not found in problem block.");
             }
 
             char operator = extractOperator(grid, start, end, operatorRow);
 
+            // Each number is a column in this block → read RIGHT TO LEFT
             List<Long> numbers = new ArrayList<>();
 
-            // All rows ABOVE operator row contain numbers (vertically stacked)
-            for (int r = 0; r < operatorRow; r++) {
-                String segment = new String(grid[r], start, end - start + 1);
-                // Extract all numbers in this row segment
-                for (String token : segment.trim().split("\\s+")) {
-                    if (token.matches("\\d+")) {
-                        numbers.add(Long.parseLong(token));
+            for (int c = end; c >= start; c--) {
+                StringBuilder sb = new StringBuilder();
+
+                // Top → operator row-1 gives digits (MSD at top)
+                for (int r = 0; r < operatorRow; r++) {
+                    if (Character.isDigit(grid[r][c])) {
+                        sb.append(grid[r][c]);
                     }
+                }
+
+                if (sb.length() > 0) {
+                    numbers.add(Long.parseLong(sb.toString()));
                 }
             }
 
-            // Solve the problem
+            // Compute result
             long result = (operator == '+') ? 0 : 1;
-            for (long num : numbers) {
-                result = (operator == '+') ? result + num : result * num;
+            for (long v : numbers) {
+                result = (operator == '+') ? result + v : result * v;
             }
 
             grandTotal += result;
@@ -73,6 +72,7 @@ public class day6 {
 
         System.out.println("Grand Total = " + grandTotal);
     }
+
 
     private static boolean isBlankColumn(char[][] g, int c) {
         for (int r = 0; r < g.length; r++) {
@@ -97,6 +97,6 @@ public class day6 {
             char ch = g[r][c];
             if (ch == '+' || ch == '*') return ch;
         }
-        throw new RuntimeException("Operator not found on row " + r);
+        throw new RuntimeException("Operator not found in operator row " + r);
     }
 }

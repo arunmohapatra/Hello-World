@@ -1,159 +1,102 @@
 import java.io.*;
-import java.math.BigInteger;
+import java.nio.file.*;
 import java.util.*;
 
-public class FreshIngredientCounter {
+public class day6 {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
-        String filePath = "I:\\input.txt";   // <-- your file location
+        List<String> lines = Files.readAllLines(Paths.get("D:\\input.txt"));
+        int rows = lines.size();
+        int cols = lines.stream().mapToInt(String::length).max().orElse(0);
 
-        List<BigInteger[]> freshRanges = new ArrayList<>();
-        List<BigInteger> ingredientIds = new ArrayList<>();
+        // Pad grid
+        char[][] grid = new char[rows][cols];
+        for (int r = 0; r < rows; r++) {
+            String line = lines.get(r);
+            for (int c = 0; c < cols; c++) {
+                grid[r][c] = (c < line.length() ? line.charAt(c) : ' ');
+            }
+        }
 
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+        long grandTotal = 0;
+        int col = 0;
 
-            String line;
-            boolean readingRanges = true;
+        while (col < cols) {
 
-            while ((line = br.readLine()) != null) {
+            // Skip blank columns
+            if (isBlankColumn(grid, col)) {
+                col++;
+                continue;
+            }
 
-                // Remove all non-printable characters
-                line = line.replaceAll("[^0-9\\-]", "").trim();
+            // Start of a problem block
+            int start = col;
 
-                if (line.isEmpty()) {
-                    readingRanges = false;
-                    continue;
-                }
+            // Move until next blank column
+            while (col < cols && !isBlankColumn(grid, col)) {
+                col++;
+            }
+            int end = col - 1;
 
-                if (readingRanges) {
-                    String[] parts = line.split("-");
+            // Extract problem block as rows of text
+            // endRow = row with operator
+            int operatorRow = findOperatorRow(grid, start, end);
 
-                    if (parts.length != 2) {
-                        System.out.println("Invalid range skipped: " + line);
-                        continue;
-                    }
+            if (operatorRow == -1) {
+                throw new RuntimeException("Operator not found in block: " + start + "-" + end);
+            }
 
-                    try {
-                        BigInteger start = new BigInteger(parts[0]);
-                        BigInteger end = new BigInteger(parts[1]);
-                        freshRanges.add(new BigInteger[]{start, end});
-                    } catch (Exception ex) {
-                        System.out.println("Invalid range skipped: " + line);
-                    }
+            char operator = extractOperator(grid, start, end, operatorRow);
 
-                } else {
-                    try {
-                        BigInteger id = new BigInteger(line);
-                        ingredientIds.add(id);
-                    } catch (Exception ex) {
-                        System.out.println("Invalid ID skipped: " + line);
+            List<Long> numbers = new ArrayList<>();
+
+            // All rows ABOVE operator row contain numbers (vertically stacked)
+            for (int r = 0; r < operatorRow; r++) {
+                String segment = new String(grid[r], start, end - start + 1);
+                // Extract all numbers in this row segment
+                for (String token : segment.trim().split("\\s+")) {
+                    if (token.matches("\\d+")) {
+                        numbers.add(Long.parseLong(token));
                     }
                 }
             }
 
-        } catch (IOException e) {
-            System.out.println("Error reading file: " + filePath);
-            e.printStackTrace();
-            return;
-        }
-
-        int freshCount = 0;
-
-        for (BigInteger id : ingredientIds) {
-            if (isFresh(id, freshRanges)) {
-                freshCount++;
+            // Solve the problem
+            long result = (operator == '+') ? 0 : 1;
+            for (long num : numbers) {
+                result = (operator == '+') ? result + num : result * num;
             }
+
+            grandTotal += result;
         }
 
-        System.out.println("Total fresh ingredient IDs: " + freshCount);
+        System.out.println("Grand Total = " + grandTotal);
     }
 
-    private static boolean isFresh(BigInteger id, List<BigInteger[]> ranges) {
-        for (BigInteger[] range : ranges) {
-            if (id.compareTo(range[0]) >= 0 && id.compareTo(range[1]) <= 0) {
-                return true;
-            }
+    private static boolean isBlankColumn(char[][] g, int c) {
+        for (int r = 0; r < g.length; r++) {
+            if (g[r][c] != ' ') return false;
         }
-        return false;
+        return true;
     }
-}
 
-
-===================================================================
-import java.io.*;
-import java.math.BigInteger;
-import java.util.*;
-
-public class FreshIngredientCounterPart2 {
-
-    public static void main(String[] args) {
-
-        String filePath = "I:\\input.txt";   // Your input file
-
-        List<BigInteger[]> ranges = new ArrayList<>();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-
-            String line;
-
-            while ((line = br.readLine()) != null) {
-
-                // Clean hidden characters
-                line = line.replaceAll("[^0-9\\-]", "").trim();
-
-                // Blank line = stop reading ranges
-                if (line.isEmpty()) {
-                    break;
-                }
-
-                // Parse ranges like 12-18
-                String[] parts = line.split("-");
-                if (parts.length != 2) continue;
-
-                try {
-                    BigInteger start = new BigInteger(parts[0]);
-                    BigInteger end = new BigInteger(parts[1]);
-                    ranges.add(new BigInteger[]{start, end});
-                } catch (Exception ex) {
-                    System.out.println("Invalid range skipped: " + line);
-                }
-            }
-
-        } catch (IOException e) {
-            System.out.println("Error reading file: " + filePath);
-            return;
-        }
-
-        // Sort ranges by start value
-        ranges.sort(Comparator.comparing(a -> a[0]));
-
-        // Merge overlapping ranges
-        List<BigInteger[]> merged = new ArrayList<>();
-
-        for (BigInteger[] r : ranges) {
-            if (merged.isEmpty()) {
-                merged.add(r);
-            } else {
-                BigInteger[] last = merged.get(merged.size() - 1);
-
-                if (r[0].compareTo(last[1].add(BigInteger.ONE)) <= 0) {
-                    // Overlap → extend end
-                    last[1] = last[1].max(r[1]);
-                } else {
-                    merged.add(r);
+    private static int findOperatorRow(char[][] g, int start, int end) {
+        for (int r = g.length - 1; r >= 0; r--) {
+            for (int c = start; c <= end; c++) {
+                if (g[r][c] == '+' || g[r][c] == '*') {
+                    return r;
                 }
             }
         }
+        return -1;
+    }
 
-        // Count total fresh IDs = sum(rangeLength)
-        BigInteger totalFresh = BigInteger.ZERO;
-
-        for (BigInteger[] r : merged) {
-            BigInteger count = r[1].subtract(r[0]).add(BigInteger.ONE);
-            totalFresh = totalFresh.add(count);
+    private static char extractOperator(char[][] g, int start, int end, int r) {
+        for (int c = start; c <= end; c++) {
+            char ch = g[r][c];
+            if (ch == '+' || ch == '*') return ch;
         }
-
-        System.out.println("Total ingredient IDs considered FRESH: " + totalFresh);
+        throw new RuntimeException("Operator not found on row " + r);
     }
 }

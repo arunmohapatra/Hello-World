@@ -1,102 +1,80 @@
-import java.io.*;
 import java.nio.file.*;
+import java.io.IOException;
 import java.util.*;
 
-public class day6 {
+public class day7 {
+    public static void main(String[] args) throws IOException {
+        List<String> lines = Files.readAllLines(Path.of("D:\\input.txt"));
+        if (lines.isEmpty()) {
+            System.err.println("input.txt is empty");
+            return;
+        }
 
-    public static void main(String[] args) throws Exception {
-
-        List<String> lines = Files.readAllLines(Paths.get("D:\\input.txt"));
         int rows = lines.size();
-        int cols = lines.stream().mapToInt(String::length).max().orElse(0);
-
-        // Build padded grid
+        int cols = lines.get(0).length();
         char[][] grid = new char[rows][cols];
+
+        int sRow = -1, sCol = -1;
         for (int r = 0; r < rows; r++) {
             String line = lines.get(r);
+            // allow variable-length lines by padding with '.' if necessary
+            if (line.length() < cols) line = String.format("%-" + cols + "s", line).replace(' ', '.');
             for (int c = 0; c < cols; c++) {
-                grid[r][c] = (c < line.length() ? line.charAt(c) : ' ');
+                grid[r][c] = line.charAt(c);
+                if (grid[r][c] == 'S') {
+                    sRow = r;
+                    sCol = c;
+                }
             }
         }
 
-        long grandTotal = 0;
-        int col = 0;
+        if (sRow == -1) {
+            System.err.println("No 'S' start found in input.txt");
+            return;
+        }
 
-        while (col < cols) {
+        long splitCount = 0L;
 
-            // Skip blank column separators
-            if (isBlankColumn(grid, col)) {
-                col++;
+        // initial beams enter the row below S (if any)
+        int startRow = sRow + 1;
+        Set<Integer> active = new HashSet<>();
+        if (startRow < rows) active.add(sCol);
+
+        // process each row from startRow to last row
+        for (int r = startRow; r < rows; r++) {
+            if (active.isEmpty()) {
+                // no beams entering this row
                 continue;
             }
 
-            // Start of problem block
-            int start = col;
-            while (col < cols && !isBlankColumn(grid, col)) col++;
-            int end = col - 1; // inclusive
+            Set<Integer> nextRow = new HashSet<>();            // beams that will enter row r+1
+            Set<Integer> processedThisRow = new HashSet<>();   // to avoid re-processing same column twice
+            Deque<Integer> queue = new ArrayDeque<>(active);   // BFS-like processing for same-row generation
 
-            // Find operator row for this block
-            int operatorRow = findOperatorRow(grid, start, end);
-            if (operatorRow == -1) {
-                throw new RuntimeException("Operator not found in problem block.");
-            }
+            while (!queue.isEmpty()) {
+                int c = queue.poll();
+                if (c < 0 || c >= cols) continue;
+                if (!processedThisRow.add(c)) continue; // already handled this column this row
 
-            char operator = extractOperator(grid, start, end, operatorRow);
-
-            // Each number is a column in this block → read RIGHT TO LEFT
-            List<Long> numbers = new ArrayList<>();
-
-            for (int c = end; c >= start; c--) {
-                StringBuilder sb = new StringBuilder();
-
-                // Top → operator row-1 gives digits (MSD at top)
-                for (int r = 0; r < operatorRow; r++) {
-                    if (Character.isDigit(grid[r][c])) {
-                        sb.append(grid[r][c]);
-                    }
-                }
-
-                if (sb.length() > 0) {
-                    numbers.add(Long.parseLong(sb.toString()));
+                char cell = grid[r][c];
+                if (cell == '^') {
+                    // beam encountered a splitter: it stops and emits new beams left & right at the SAME row
+                    splitCount++;
+                    int left = c - 1;
+                    int right = c + 1;
+                    if (left >= 0 && !processedThisRow.contains(left)) queue.add(left);
+                    if (right < cols && !processedThisRow.contains(right)) queue.add(right);
+                    // do NOT add to nextRow (beam stops)
+                } else {
+                    // passes through ('.' or 'S' or any other non-split symbol) => continues downward
+                    nextRow.add(c);
                 }
             }
 
-            // Compute result
-            long result = (operator == '+') ? 0 : 1;
-            for (long v : numbers) {
-                result = (operator == '+') ? result + v : result * v;
-            }
-
-            grandTotal += result;
+            // move to next row: beams that survived to next row
+            active = nextRow;
         }
 
-        System.out.println("Grand Total = " + grandTotal);
-    }
-
-
-    private static boolean isBlankColumn(char[][] g, int c) {
-        for (int r = 0; r < g.length; r++) {
-            if (g[r][c] != ' ') return false;
-        }
-        return true;
-    }
-
-    private static int findOperatorRow(char[][] g, int start, int end) {
-        for (int r = g.length - 1; r >= 0; r--) {
-            for (int c = start; c <= end; c++) {
-                if (g[r][c] == '+' || g[r][c] == '*') {
-                    return r;
-                }
-            }
-        }
-        return -1;
-    }
-
-    private static char extractOperator(char[][] g, int start, int end, int r) {
-        for (int c = start; c <= end; c++) {
-            char ch = g[r][c];
-            if (ch == '+' || ch == '*') return ch;
-        }
-        throw new RuntimeException("Operator not found in operator row " + r);
+        System.out.println(splitCount);
     }
 }

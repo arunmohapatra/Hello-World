@@ -78,3 +78,115 @@ public class day7 {
         System.out.println(splitCount);
     }
 }
+
+=========================================
+
+import java.nio.file.*;
+import java.io.IOException;
+import java.util.*;
+
+public class day7_2 {
+
+    static char[][] grid;
+    static int rows, cols;
+
+    // DP memo for Part 2
+    static Long[][] memo;
+
+    public static void main(String[] args) throws Exception {
+        List<String> lines = Files.readAllLines(Path.of("D:\\input.txt"));
+        rows = lines.size();
+        cols = lines.get(0).length();
+
+        grid = new char[rows][cols];
+
+        int sRow = -1, sCol = -1;
+        for (int r = 0; r < rows; r++) {
+            String line = lines.get(r);
+            if (line.length() < cols)
+                line = String.format("%-" + cols + "s", line).replace(' ', '.');
+
+            for (int c = 0; c < cols; c++) {
+                grid[r][c] = line.charAt(c);
+                if (grid[r][c] == 'S') {
+                    sRow = r;
+                    sCol = c;
+                }
+            }
+        }
+
+        if (sRow == -1) {
+            System.err.println("No S found");
+            return;
+        }
+
+        // ---------- PART 1 ----------
+        long part1 = solvePart1(sRow, sCol);
+        System.out.println("Part 1 (total splits): " + part1);
+
+        // ---------- PART 2 ----------
+        memo = new Long[rows][cols];
+        long part2 = solvePart2(sRow + 1, sCol);
+        System.out.println("Part 2 (total timelines): " + part2);
+    }
+
+    // ----------------------------------------------------------------------
+    // PART 1 - Classic tachyon beams (merge beams)
+    // ----------------------------------------------------------------------
+    private static long solvePart1(int sRow, int sCol) {
+        long splitCount = 0;
+
+        Set<Integer> active = new HashSet<>();
+        if (sRow < rows) active.add(sCol);
+
+        for (int r = sRow; r < rows; r++) {
+            if (active.isEmpty()) break;
+
+            Set<Integer> nextRow = new HashSet<>();
+            Set<Integer> processed = new HashSet<>();
+            Deque<Integer> q = new ArrayDeque<>(active);
+
+            while (!q.isEmpty()) {
+                int c = q.poll();
+                if (c < 0 || c >= cols) continue;
+                if (!processed.add(c)) continue;
+
+                char cell = grid[r][c];
+                if (cell == '^') {
+                    splitCount++;
+                    if (c - 1 >= 0 && !processed.contains(c - 1)) q.add(c - 1);
+                    if (c + 1 < cols && !processed.contains(c + 1)) q.add(c + 1);
+                } else {
+                    nextRow.add(c);
+                }
+            }
+            active = nextRow;
+        }
+        return splitCount;
+    }
+
+    // ----------------------------------------------------------------------
+    // PART 2 - Quantum tachyon manifold (count timelines)
+    // ----------------------------------------------------------------------
+    private static long solvePart2(int r, int c) {
+        if (c < 0 || c >= cols) return 0;
+        if (r >= rows) return 1; // reached bottom → finishes timeline
+
+        if (memo[r][c] != null) return memo[r][c];
+
+        long result;
+
+        char cell = grid[r][c];
+        if (cell == '^') {
+            long left = solvePart2(r, c - 1);
+            long right = solvePart2(r, c + 1);
+            result = left + right;
+        } else {
+            result = solvePart2(r + 1, c);
+        }
+
+        memo[r][c] = result;
+        return result;
+    }
+}
+

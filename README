@@ -1,192 +1,124 @@
-import java.nio.file.*;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
-public class day7 {
-    public static void main(String[] args) throws IOException {
-        List<String> lines = Files.readAllLines(Path.of("D:\\input.txt"));
-        if (lines.isEmpty()) {
-            System.err.println("input.txt is empty");
-            return;
+public class day8 {
+
+    static class Pair implements Comparable<Pair> {
+        double dist;
+        int a, b;
+
+        Pair(double d, int x, int y) {
+            dist = d;
+            a = x;
+            b = y;
         }
 
-        int rows = lines.size();
-        int cols = lines.get(0).length();
-        char[][] grid = new char[rows][cols];
-
-        int sRow = -1, sCol = -1;
-        for (int r = 0; r < rows; r++) {
-            String line = lines.get(r);
-            // allow variable-length lines by padding with '.' if necessary
-            if (line.length() < cols) line = String.format("%-" + cols + "s", line).replace(' ', '.');
-            for (int c = 0; c < cols; c++) {
-                grid[r][c] = line.charAt(c);
-                if (grid[r][c] == 'S') {
-                    sRow = r;
-                    sCol = c;
-                }
-            }
+        @Override
+        public int compareTo(Pair other) {
+            return Double.compare(this.dist, other.dist);
         }
-
-        if (sRow == -1) {
-            System.err.println("No 'S' start found in input.txt");
-            return;
-        }
-
-        long splitCount = 0L;
-
-        // initial beams enter the row below S (if any)
-        int startRow = sRow + 1;
-        Set<Integer> active = new HashSet<>();
-        if (startRow < rows) active.add(sCol);
-
-        // process each row from startRow to last row
-        for (int r = startRow; r < rows; r++) {
-            if (active.isEmpty()) {
-                // no beams entering this row
-                continue;
-            }
-
-            Set<Integer> nextRow = new HashSet<>();            // beams that will enter row r+1
-            Set<Integer> processedThisRow = new HashSet<>();   // to avoid re-processing same column twice
-            Deque<Integer> queue = new ArrayDeque<>(active);   // BFS-like processing for same-row generation
-
-            while (!queue.isEmpty()) {
-                int c = queue.poll();
-                if (c < 0 || c >= cols) continue;
-                if (!processedThisRow.add(c)) continue; // already handled this column this row
-
-                char cell = grid[r][c];
-                if (cell == '^') {
-                    // beam encountered a splitter: it stops and emits new beams left & right at the SAME row
-                    splitCount++;
-                    int left = c - 1;
-                    int right = c + 1;
-                    if (left >= 0 && !processedThisRow.contains(left)) queue.add(left);
-                    if (right < cols && !processedThisRow.contains(right)) queue.add(right);
-                    // do NOT add to nextRow (beam stops)
-                } else {
-                    // passes through ('.' or 'S' or any other non-split symbol) => continues downward
-                    nextRow.add(c);
-                }
-            }
-
-            // move to next row: beams that survived to next row
-            active = nextRow;
-        }
-
-        System.out.println(splitCount);
     }
-}
 
-=========================================
+    static class DSU {
+        int[] parent;
+        int[] size;
 
-import java.nio.file.*;
-import java.io.IOException;
-import java.util.*;
+        DSU(int n) {
+            parent = new int[n];
+            size = new int[n];
+            for (int i = 0; i < n; i++) {
+                parent[i] = i;
+                size[i] = 1;
+            }
+        }
 
-public class day7_2 {
+        int find(int x) {
+            if (parent[x] != x)
+                parent[x] = find(parent[x]);
+            return parent[x];
+        }
 
-    static char[][] grid;
-    static int rows, cols;
-
-    // DP memo for Part 2
-    static Long[][] memo;
+        void union(int a, int b) {
+            int pa = find(a);
+            int pb = find(b);
+            if (pa != pb) {
+                parent[pb] = pa;
+                size[pa] += size[pb];
+            }
+        }
+    }
 
     public static void main(String[] args) throws Exception {
-        List<String> lines = Files.readAllLines(Path.of("D:\\input.txt"));
-        rows = lines.size();
-        cols = lines.get(0).length();
 
-        grid = new char[rows][cols];
+        // Read file named "input"
+        File file = new File("D:\\input.txt");
+        BufferedReader br = new BufferedReader(new FileReader(file));
 
-        int sRow = -1, sCol = -1;
-        for (int r = 0; r < rows; r++) {
-            String line = lines.get(r);
-            if (line.length() < cols)
-                line = String.format("%-" + cols + "s", line).replace(' ', '.');
+        List<int[]> points = new ArrayList<>();
+        String line;
 
-            for (int c = 0; c < cols; c++) {
-                grid[r][c] = line.charAt(c);
-                if (grid[r][c] == 'S') {
-                    sRow = r;
-                    sCol = c;
-                }
+        while ((line = br.readLine()) != null) {
+            line = line.trim();
+            if (line.isEmpty()) continue;
+            String[] parts = line.split(",");
+            points.add(new int[]{
+                    Integer.parseInt(parts[0].trim()),
+                    Integer.parseInt(parts[1].trim()),
+                    Integer.parseInt(parts[2].trim())
+            });
+        }
+        br.close();
+
+        int n = points.size();
+        List<Pair> pairs = new ArrayList<>();
+
+        // Compute all distances
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                int[] A = points.get(i);
+                int[] B = points.get(j);
+
+                double dx = A[0] - B[0];
+                double dy = A[1] - B[1];
+                double dz = A[2] - B[2];
+                double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                pairs.add(new Pair(dist, i, j));
             }
         }
 
-        if (sRow == -1) {
-            System.err.println("No S found");
-            return;
-        }
+        // Sort pairs by distance
+        Collections.sort(pairs);
 
-        // ---------- PART 1 ----------
-        long part1 = solvePart1(sRow, sCol);
-        System.out.println("Part 1 (total splits): " + part1);
+        DSU dsu = new DSU(n);
 
-        // ---------- PART 2 ----------
-        memo = new Long[rows][cols];
-        long part2 = solvePart2(sRow + 1, sCol);
-        System.out.println("Part 2 (total timelines): " + part2);
-    }
+        // Process exactly 1000 closest pairs
+        int LIMIT = Math.min(1000, pairs.size());
 
-    // ----------------------------------------------------------------------
-    // PART 1 - Classic tachyon beams (merge beams)
-    // ----------------------------------------------------------------------
-    private static long solvePart1(int sRow, int sCol) {
-        long splitCount = 0;
-
-        Set<Integer> active = new HashSet<>();
-        if (sRow < rows) active.add(sCol);
-
-        for (int r = sRow; r < rows; r++) {
-            if (active.isEmpty()) break;
-
-            Set<Integer> nextRow = new HashSet<>();
-            Set<Integer> processed = new HashSet<>();
-            Deque<Integer> q = new ArrayDeque<>(active);
-
-            while (!q.isEmpty()) {
-                int c = q.poll();
-                if (c < 0 || c >= cols) continue;
-                if (!processed.add(c)) continue;
-
-                char cell = grid[r][c];
-                if (cell == '^') {
-                    splitCount++;
-                    if (c - 1 >= 0 && !processed.contains(c - 1)) q.add(c - 1);
-                    if (c + 1 < cols && !processed.contains(c + 1)) q.add(c + 1);
-                } else {
-                    nextRow.add(c);
-                }
+        for (int i = 0; i < LIMIT; i++) {
+            Pair p = pairs.get(i);
+            // Merge only if not already connected
+            if (dsu.find(p.a) != dsu.find(p.b)) {
+                dsu.union(p.a, p.b);
             }
-            active = nextRow;
-        }
-        return splitCount;
-    }
-
-    // ----------------------------------------------------------------------
-    // PART 2 - Quantum tachyon manifold (count timelines)
-    // ----------------------------------------------------------------------
-    private static long solvePart2(int r, int c) {
-        if (c < 0 || c >= cols) return 0;
-        if (r >= rows) return 1; // reached bottom → finishes timeline
-
-        if (memo[r][c] != null) return memo[r][c];
-
-        long result;
-
-        char cell = grid[r][c];
-        if (cell == '^') {
-            long left = solvePart2(r, c - 1);
-            long right = solvePart2(r, c + 1);
-            result = left + right;
-        } else {
-            result = solvePart2(r + 1, c);
         }
 
-        memo[r][c] = result;
-        return result;
+        // Count components
+        HashMap<Integer, Integer> comp = new HashMap<>();
+        for (int i = 0; i < n; i++) {
+            int root = dsu.find(i);
+            comp.put(root, comp.getOrDefault(root, 0) + 1);
+        }
+
+        // Get the 3 largest
+        List<Integer> sizes = new ArrayList<>(comp.values());
+        sizes.sort(Collections.reverseOrder());
+
+        int answer = 1;
+        for (int i = 0; i < Math.min(3, sizes.size()); i++) {
+            answer *= sizes.get(i);
+        }
+
+        System.out.println(answer);
     }
 }
-

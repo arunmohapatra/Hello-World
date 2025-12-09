@@ -38,22 +38,21 @@ public class day8 {
             return parent[x];
         }
 
-        void union(int a, int b) {
+        boolean union(int a, int b) {
             int pa = find(a);
             int pb = find(b);
-            if (pa != pb) {
-                parent[pb] = pa;
-                size[pa] += size[pb];
-            }
+            if (pa == pb) return false;
+
+            parent[pb] = pa;
+            size[pa] += size[pb];
+            return true;
         }
     }
 
     public static void main(String[] args) throws Exception {
 
         // Read file named "input"
-        File file = new File("D:\\input.txt");
-        BufferedReader br = new BufferedReader(new FileReader(file));
-
+        BufferedReader br = new BufferedReader(new FileReader("I:\\input.txt"));
         List<int[]> points = new ArrayList<>();
         String line;
 
@@ -72,7 +71,7 @@ public class day8 {
         int n = points.size();
         List<Pair> pairs = new ArrayList<>();
 
-        // Compute all distances
+        // Compute all pairwise distances
         for (int i = 0; i < n; i++) {
             for (int j = i + 1; j < n; j++) {
                 int[] A = points.get(i);
@@ -81,42 +80,34 @@ public class day8 {
                 double dx = A[0] - B[0];
                 double dy = A[1] - B[1];
                 double dz = A[2] - B[2];
+
                 double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
                 pairs.add(new Pair(dist, i, j));
             }
         }
 
-        // Sort pairs by distance
+        // Sort by distance
         Collections.sort(pairs);
 
         DSU dsu = new DSU(n);
 
-        // Process exactly 1000 closest pairs
-        int LIMIT = Math.min(1000, pairs.size());
+        int components = n;
+        int answer = -1;
 
-        for (int i = 0; i < LIMIT; i++) {
-            Pair p = pairs.get(i);
-            // Merge only if not already connected
-            if (dsu.find(p.a) != dsu.find(p.b)) {
-                dsu.union(p.a, p.b);
+        // Connect until one circuit remains
+        for (Pair p : pairs) {
+            if (dsu.union(p.a, p.b)) {
+                components--;
+
+                // The merge that reduces components to 1 is the final required connection.
+                if (components == 1) {
+                    int x1 = points.get(p.a)[0];
+                    int x2 = points.get(p.b)[0];
+                    answer = x1 * x2;
+                    break;
+                }
             }
-        }
-
-        // Count components
-        HashMap<Integer, Integer> comp = new HashMap<>();
-        for (int i = 0; i < n; i++) {
-            int root = dsu.find(i);
-            comp.put(root, comp.getOrDefault(root, 0) + 1);
-        }
-
-        // Get the 3 largest
-        List<Integer> sizes = new ArrayList<>(comp.values());
-        sizes.sort(Collections.reverseOrder());
-
-        int answer = 1;
-        for (int i = 0; i < Math.min(3, sizes.size()); i++) {
-            answer *= sizes.get(i);
         }
 
         System.out.println(answer);

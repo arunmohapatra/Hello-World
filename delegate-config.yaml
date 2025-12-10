@@ -1,17 +1,54 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: delegate-config
-  namespace: harness-delegate-ng   # replace with the namespace where your delegate runs
-data:
-  delegate-config.yaml: |
-    name: jet-harnesscd-delegate-eks   # Your delegate name
-    delegateType: ON_PREM              # On-prem / private delegate
-    logStreaming:
-      enabled: false                   # Disable sending full logs to SaaS
-      sendStageStatusOnly: true        # Only stage execution status is sent
-    logRetentionDays: 7                # Keep logs locally for 7 days
-    metricsEnabled: true               # Send minimal metrics if needed
-    tags:
-      environment: eks
-      team: devops
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
+
+public class day9 {
+    public static void main(String[] args) {
+        String filename = "D:\\input.txt";
+        List<int[]> pts = new ArrayList<>();
+
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(filename));
+            for (String line : lines) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+                // Expect lines like "7,1"
+                String[] parts = line.split(",");
+                if (parts.length != 2) {
+                    System.err.println("Skipping malformed line: " + line);
+                    continue;
+                }
+                int x = Integer.parseInt(parts[0].trim());
+                int y = Integer.parseInt(parts[1].trim());
+                pts.add(new int[]{x, y});
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading " + filename + ": " + e.getMessage());
+            return;
+        }
+
+        if (pts.size() < 2) {
+            System.out.println("0");
+            return;
+        }
+
+        long maxArea = 0L;
+        int n = pts.size();
+        for (int i = 0; i < n; ++i) {
+            int x1 = pts.get(i)[0];
+            int y1 = pts.get(i)[1];
+            for (int j = i + 1; j < n; ++j) {
+                int x2 = pts.get(j)[0];
+                int y2 = pts.get(j)[1];
+                // area uses inclusive width and height
+                long width = Math.abs((long)x1 - x2) + 1L;
+                long height = Math.abs((long)y1 - y2) + 1L;
+                long area = width * height;
+                if (area > maxArea) maxArea = area;
+            }
+        }
+
+        System.out.println(maxArea);
+    }
+}
+

@@ -1,54 +1,106 @@
 import java.io.*;
-import java.nio.file.*;
 import java.util.*;
 
-public class day9 {
-    public static void main(String[] args) {
-        String filename = "D:\\input.txt";
-        List<int[]> pts = new ArrayList<>();
+public class day10 {
 
-        try {
-            List<String> lines = Files.readAllLines(Paths.get(filename));
-            for (String line : lines) {
-                line = line.trim();
-                if (line.isEmpty()) continue;
-                // Expect lines like "7,1"
-                String[] parts = line.split(",");
-                if (parts.length != 2) {
-                    System.err.println("Skipping malformed line: " + line);
-                    continue;
+    // Convert bitmask to toggled mask
+    static int toggle(int state, int mask) {
+        return state ^ mask;
+    }
+
+    // BFS to find minimum button presses to reach target
+    static int bfsMinPresses(int target, List<Integer> buttonMasks, int numLights) {
+        int maxState = 1 << numLights;
+        int[] dist = new int[maxState];
+        Arrays.fill(dist, -1);
+
+        Queue<Integer> q = new ArrayDeque<>();
+        dist[0] = 0; // all lights off initially
+        q.add(0);
+
+        while (!q.isEmpty()) {
+            int cur = q.poll();
+            if (cur == target)
+                return dist[cur];
+
+            for (int mask : buttonMasks) {
+                int next = toggle(cur, mask);
+                if (dist[next] == -1) {
+                    dist[next] = dist[cur] + 1;
+                    q.add(next);
                 }
-                int x = Integer.parseInt(parts[0].trim());
-                int y = Integer.parseInt(parts[1].trim());
-                pts.add(new int[]{x, y});
-            }
-        } catch (IOException e) {
-            System.err.println("Error reading " + filename + ": " + e.getMessage());
-            return;
-        }
-
-        if (pts.size() < 2) {
-            System.out.println("0");
-            return;
-        }
-
-        long maxArea = 0L;
-        int n = pts.size();
-        for (int i = 0; i < n; ++i) {
-            int x1 = pts.get(i)[0];
-            int y1 = pts.get(i)[1];
-            for (int j = i + 1; j < n; ++j) {
-                int x2 = pts.get(j)[0];
-                int y2 = pts.get(j)[1];
-                // area uses inclusive width and height
-                long width = Math.abs((long)x1 - x2) + 1L;
-                long height = Math.abs((long)y1 - y2) + 1L;
-                long area = width * height;
-                if (area > maxArea) maxArea = area;
             }
         }
+        return -1; // unreachable (should not happen for AoC)
+    }
 
-        System.out.println(maxArea);
+    // Parse "(0,2,3)" into bitmask
+    static int parseButton(String s) {
+        s = s.substring(1, s.length() - 1).trim(); // remove parentheses
+        if (s.isEmpty()) return 0;
+
+        String[] parts = s.split(",");
+        int mask = 0;
+        for (String p : parts) {
+            int i = Integer.parseInt(p.trim());
+            mask |= (1 << i);
+        }
+        return mask;
+    }
+
+    // Parse target pattern “[.#.#.]” into bitmask
+    static int parseTarget(String s) {
+        s = s.substring(1, s.length() - 1); // remove brackets
+        int mask = 0;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == '#') {
+                mask |= (1 << i);
+            }
+        }
+        return mask;
+    }
+
+    public static void main(String[] args) throws Exception {
+        BufferedReader br = new BufferedReader(new FileReader("D:\\input.txt"));
+        String line;
+
+        long totalPresses = 0;
+
+        while ((line = br.readLine()) != null) {
+            line = line.trim();
+            if (line.isEmpty()) continue;
+
+            // Extract parts
+            // pattern [...]
+            int start = line.indexOf('[');
+            int end = line.indexOf(']');
+            String targetPattern = line.substring(start, end + 1);
+
+            int targetMask = parseTarget(targetPattern);
+            int numLights = targetPattern.length() - 2; // exclude brackets
+
+            // Extract all (...) button groups before '{'
+            List<Integer> buttonMasks = new ArrayList<>();
+            int idx = end + 1;
+            while (idx < line.length() && line.charAt(idx) != '{') {
+                if (line.charAt(idx) == '(') {
+                    int close = line.indexOf(')', idx);
+                    String btn = line.substring(idx, close + 1);
+                    buttonMasks.add(parseButton(btn));
+                    idx = close + 1;
+                } else {
+                    idx++;
+                }
+            }
+
+            // BFS to find minimal presses
+            int minPress = bfsMinPresses(targetMask, buttonMasks, numLights);
+            totalPresses += minPress;
+        }
+
+        br.close();
+
+        System.out.println("Total minimum button presses = " + totalPresses);
     }
 }
 

@@ -1,17 +1,74 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: delegate-config
-  namespace: harness-delegate-ng   # replace with the namespace where your delegate runs
-data:
-  delegate-config.yaml: |
-    name: jet-harnesscd-delegate-eks   # Your delegate name
-    delegateType: ON_PREM              # On-prem / private delegate
-    logStreaming:
-      enabled: false                   # Disable sending full logs to SaaS
-      sendStageStatusOnly: true        # Only stage execution status is sent
-    logRetentionDays: 7                # Keep logs locally for 7 days
-    metricsEnabled: true               # Send minimal metrics if needed
-    tags:
-      environment: eks
-      team: devops
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
+
+public class day11 {
+
+    public static void main(String[] args) {
+        String fileName = "I:\\input.txt";
+        Map<String, List<String>> graph = new HashMap<>();
+
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(fileName));
+
+            // Build graph
+            for (String line : lines) {
+                if (line.trim().isEmpty()) continue;
+
+                String[] parts = line.split(":");
+                String device = parts[0].trim();
+
+                List<String> outputs = new ArrayList<>();
+                if (parts.length > 1) {
+                    String[] outDevices = parts[1].trim().split("\\s+");
+                    for (String out : outDevices) {
+                        outputs.add(out.trim());
+                    }
+                }
+                graph.put(device, outputs);
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
+            return;
+        }
+
+        Map<String, Long> memo = new HashMap<>();
+        Set<String> visited = new HashSet<>();
+
+        long totalPaths = countPaths("you", graph, memo, visited);
+        System.out.println("Total paths from 'you' to 'out': " + totalPaths);
+    }
+
+    private static long countPaths(String current,
+                                   Map<String, List<String>> graph,
+                                   Map<String, Long> memo,
+                                   Set<String> visited) {
+
+        // If reached out, this is one path
+        if (current.equals("out"))
+            return 1;
+
+        // If we encounter a cycle, stop exploring
+        if (visited.contains(current))
+            return 0;
+
+        // Memoized?
+        if (memo.containsKey(current))
+            return memo.get(current);
+
+        visited.add(current);  // mark current on this path
+
+        long total = 0;
+
+        List<String> neighbors = graph.getOrDefault(current, Collections.emptyList());
+        for (String next : neighbors) {
+            total += countPaths(next, graph, memo, visited);
+        }
+
+        visited.remove(current); // backtrack
+
+        memo.put(current, total);
+        return total;
+    }
+}

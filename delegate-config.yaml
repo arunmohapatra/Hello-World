@@ -1,106 +1,74 @@
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 
-public class day10 {
+public class day11 {
 
-    // Convert bitmask to toggled mask
-    static int toggle(int state, int mask) {
-        return state ^ mask;
-    }
+    public static void main(String[] args) {
+        String fileName = "I:\\input.txt";
+        Map<String, List<String>> graph = new HashMap<>();
 
-    // BFS to find minimum button presses to reach target
-    static int bfsMinPresses(int target, List<Integer> buttonMasks, int numLights) {
-        int maxState = 1 << numLights;
-        int[] dist = new int[maxState];
-        Arrays.fill(dist, -1);
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(fileName));
 
-        Queue<Integer> q = new ArrayDeque<>();
-        dist[0] = 0; // all lights off initially
-        q.add(0);
+            // Build graph
+            for (String line : lines) {
+                if (line.trim().isEmpty()) continue;
 
-        while (!q.isEmpty()) {
-            int cur = q.poll();
-            if (cur == target)
-                return dist[cur];
+                String[] parts = line.split(":");
+                String device = parts[0].trim();
 
-            for (int mask : buttonMasks) {
-                int next = toggle(cur, mask);
-                if (dist[next] == -1) {
-                    dist[next] = dist[cur] + 1;
-                    q.add(next);
+                List<String> outputs = new ArrayList<>();
+                if (parts.length > 1) {
+                    String[] outDevices = parts[1].trim().split("\\s+");
+                    for (String out : outDevices) {
+                        outputs.add(out.trim());
+                    }
                 }
-            }
-        }
-        return -1; // unreachable (should not happen for AoC)
-    }
-
-    // Parse "(0,2,3)" into bitmask
-    static int parseButton(String s) {
-        s = s.substring(1, s.length() - 1).trim(); // remove parentheses
-        if (s.isEmpty()) return 0;
-
-        String[] parts = s.split(",");
-        int mask = 0;
-        for (String p : parts) {
-            int i = Integer.parseInt(p.trim());
-            mask |= (1 << i);
-        }
-        return mask;
-    }
-
-    // Parse target pattern “[.#.#.]” into bitmask
-    static int parseTarget(String s) {
-        s = s.substring(1, s.length() - 1); // remove brackets
-        int mask = 0;
-        for (int i = 0; i < s.length(); i++) {
-            if (s.charAt(i) == '#') {
-                mask |= (1 << i);
-            }
-        }
-        return mask;
-    }
-
-    public static void main(String[] args) throws Exception {
-        BufferedReader br = new BufferedReader(new FileReader("D:\\input.txt"));
-        String line;
-
-        long totalPresses = 0;
-
-        while ((line = br.readLine()) != null) {
-            line = line.trim();
-            if (line.isEmpty()) continue;
-
-            // Extract parts
-            // pattern [...]
-            int start = line.indexOf('[');
-            int end = line.indexOf(']');
-            String targetPattern = line.substring(start, end + 1);
-
-            int targetMask = parseTarget(targetPattern);
-            int numLights = targetPattern.length() - 2; // exclude brackets
-
-            // Extract all (...) button groups before '{'
-            List<Integer> buttonMasks = new ArrayList<>();
-            int idx = end + 1;
-            while (idx < line.length() && line.charAt(idx) != '{') {
-                if (line.charAt(idx) == '(') {
-                    int close = line.indexOf(')', idx);
-                    String btn = line.substring(idx, close + 1);
-                    buttonMasks.add(parseButton(btn));
-                    idx = close + 1;
-                } else {
-                    idx++;
-                }
+                graph.put(device, outputs);
             }
 
-            // BFS to find minimal presses
-            int minPress = bfsMinPresses(targetMask, buttonMasks, numLights);
-            totalPresses += minPress;
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
+            return;
         }
 
-        br.close();
+        Map<String, Long> memo = new HashMap<>();
+        Set<String> visited = new HashSet<>();
 
-        System.out.println("Total minimum button presses = " + totalPresses);
+        long totalPaths = countPaths("you", graph, memo, visited);
+        System.out.println("Total paths from 'you' to 'out': " + totalPaths);
+    }
+
+    private static long countPaths(String current,
+                                   Map<String, List<String>> graph,
+                                   Map<String, Long> memo,
+                                   Set<String> visited) {
+
+        // If reached out, this is one path
+        if (current.equals("out"))
+            return 1;
+
+        // If we encounter a cycle, stop exploring
+        if (visited.contains(current))
+            return 0;
+
+        // Memoized?
+        if (memo.containsKey(current))
+            return memo.get(current);
+
+        visited.add(current);  // mark current on this path
+
+        long total = 0;
+
+        List<String> neighbors = graph.getOrDefault(current, Collections.emptyList());
+        for (String next : neighbors) {
+            total += countPaths(next, graph, memo, visited);
+        }
+
+        visited.remove(current); // backtrack
+
+        memo.put(current, total);
+        return total;
     }
 }
-

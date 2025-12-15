@@ -1,74 +1,64 @@
-import java.io.*;
-import java.nio.file.*;
-import java.util.*;
+✅ Best Choice from Open Source
 
-public class day11 {
+👉 Spinnaker
 
-    public static void main(String[] args) {
-        String fileName = "I:\\input.txt";
-        Map<String, List<String>> graph = new HashMap<>();
+Why:
 
-        try {
-            List<String> lines = Files.readAllLines(Paths.get(fileName));
+Only open-source CD tool that is truly multi-cloud (AWS, Azure, GCP, Kubernetes)
 
-            // Build graph
-            for (String line : lines) {
-                if (line.trim().isEmpty()) continue;
+Best-in-class deployment strategies (blue/green, canary, rolling)
 
-                String[] parts = line.split(":");
-                String device = parts[0].trim();
+Proven horizontal scalability in very large enterprises
 
-                List<String> outputs = new ArrayList<>();
-                if (parts.length > 1) {
-                    String[] outDevices = parts[1].trim().split("\\s+");
-                    for (String out : outDevices) {
-                        outputs.add(out.trim());
-                    }
-                }
-                graph.put(device, outputs);
-            }
+Designed as a CD control plane, not just pipelines
 
-        } catch (IOException e) {
-            System.out.println("Error reading file: " + e.getMessage());
-            return;
-        }
+Trade-offs (accepted in enterprise):
 
-        Map<String, Long> memo = new HashMap<>();
-        Set<String> visited = new HashSet<>();
+High operational complexity
 
-        long totalPaths = countPaths("you", graph, memo, visited);
-        System.out.println("Total paths from 'you' to 'out': " + totalPaths);
-    }
+Limited deep customization compared to Jenkins
 
-    private static long countPaths(String current,
-                                   Map<String, List<String>> graph,
-                                   Map<String, Long> memo,
-                                   Set<String> visited) {
+No mainframe support
 
-        // If reached out, this is one path
-        if (current.equals("out"))
-            return 1;
+➡️ Conclusion:
 
-        // If we encounter a cycle, stop exploring
-        if (visited.contains(current))
-            return 0;
+If you must pick ONE open-source CD tool for enterprise scale, Spinnaker is the correct choice.
 
-        // Memoized?
-        if (memo.containsKey(current))
-            return memo.get(current);
+🏆 Best Choice for Self-Hosted Enterprise (Proprietary)
 
-        visited.add(current);  // mark current on this path
+👉 IBM UrbanCode Deploy
 
-        long total = 0;
+Why:
 
-        List<String> neighbors = graph.getOrDefault(current, Collections.emptyList());
-        for (String next : neighbors) {
-            total += countPaths(next, graph, memo, visited);
-        }
+Broadest deployment coverage: cloud, Kubernetes, on-prem, mainframe
 
-        visited.remove(current); // backtrack
+Strongest governance, audit, approvals, compliance
 
-        memo.put(current, total);
-        return total;
-    }
-}
+Highly customizable and extensible
+
+Operationally stable and predictable for long-term in-house ownership
+
+Proven in Tier-1 banks and regulated environments
+
+Trade-offs:
+
+Not cloud-native by design
+
+Canary deployments require customization
+
+➡️ Conclusion:
+
+If you must pick ONE self-hosted enterprise CD tool, IBM UrbanCode Deploy is the safest and most complete choice.
+
+🔑 Final One-Line Recommendation
+
+Open Source → Spinnaker
+Self-Hosted Enterprise → IBM UrbanCode Deploy
+
+If you want next, I can:
+
+Propose a co-existence model (Spinnaker + UCD)
+
+Create a leadership decision slide
+
+Map which LOB should use which tool

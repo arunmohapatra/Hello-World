@@ -1,17 +1,64 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: delegate-config
-  namespace: harness-delegate-ng   # replace with the namespace where your delegate runs
-data:
-  delegate-config.yaml: |
-    name: jet-harnesscd-delegate-eks   # Your delegate name
-    delegateType: ON_PREM              # On-prem / private delegate
-    logStreaming:
-      enabled: false                   # Disable sending full logs to SaaS
-      sendStageStatusOnly: true        # Only stage execution status is sent
-    logRetentionDays: 7                # Keep logs locally for 7 days
-    metricsEnabled: true               # Send minimal metrics if needed
-    tags:
-      environment: eks
-      team: devops
+✅ Best Choice from Open Source
+
+👉 Spinnaker
+
+Why:
+
+Only open-source CD tool that is truly multi-cloud (AWS, Azure, GCP, Kubernetes)
+
+Best-in-class deployment strategies (blue/green, canary, rolling)
+
+Proven horizontal scalability in very large enterprises
+
+Designed as a CD control plane, not just pipelines
+
+Trade-offs (accepted in enterprise):
+
+High operational complexity
+
+Limited deep customization compared to Jenkins
+
+No mainframe support
+
+➡️ Conclusion:
+
+If you must pick ONE open-source CD tool for enterprise scale, Spinnaker is the correct choice.
+
+🏆 Best Choice for Self-Hosted Enterprise (Proprietary)
+
+👉 IBM UrbanCode Deploy
+
+Why:
+
+Broadest deployment coverage: cloud, Kubernetes, on-prem, mainframe
+
+Strongest governance, audit, approvals, compliance
+
+Highly customizable and extensible
+
+Operationally stable and predictable for long-term in-house ownership
+
+Proven in Tier-1 banks and regulated environments
+
+Trade-offs:
+
+Not cloud-native by design
+
+Canary deployments require customization
+
+➡️ Conclusion:
+
+If you must pick ONE self-hosted enterprise CD tool, IBM UrbanCode Deploy is the safest and most complete choice.
+
+🔑 Final One-Line Recommendation
+
+Open Source → Spinnaker
+Self-Hosted Enterprise → IBM UrbanCode Deploy
+
+If you want next, I can:
+
+Propose a co-existence model (Spinnaker + UCD)
+
+Create a leadership decision slide
+
+Map which LOB should use which tool

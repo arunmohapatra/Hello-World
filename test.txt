@@ -1,0 +1,315 @@
+Forking Open Source Spinnaker gives you full control to fix vulnerabilities, apply org-specific changes, and build hardened images, but upstreaming those changes back to OSS is slow and unpredictable. The biggest risks are fork drift, release cadence mismatch, long review cycles, and rejection of org-specific or backward-incompatible changes. To succeed, internal releases must be decoupled from upstream acceptance, and only small, generic, config-driven fixes should be targeted for open-source contribution.
+
+Key Challenges (at a Glance)
+Area				Challenge
+----				---------
+Release cadence		OSS moves faster than enterprise timelines
+Fork drift			Long-running patches become hard to rebase
+Security fixes		Org-specific hardening often not accepted upstream
+Reviews				Maintainer bandwidth causes 30–90 day delays
+Compatibility		Upstream demands backward compatibility
+Testing				Internal CI ≠ community CI
+Legal/IP			Extra approvals before contribution
+Image builds		Docker/image changes not acceptable upstream
+
+Release Cadence Mismatch
+------------------------
+What it means:
+Spinnaker’s open-source community releases frequently and continuously, while enterprises usually follow slower, gated release cycles.
+
+Why it’s a challenge:
+	=> While you are testing and approving a fix internally, upstream code keeps changing.
+	=> By the time you create a PR, the upstream branch may already look different.
+
+Impact:
+	=> Frequent rebases
+	=> Merge conflicts
+	=> Delays in upstreaming changes
+
+Fork Drift
+----------
+What it means:
+Your fork slowly diverges from upstream because both evolve independently.
+
+Why it’s a challenge:
+	=> Custom logic accumulates
+	=> Upstream refactors the same areas you modified
+
+Impact:
+	=> Upgrades become harder
+	=> More engineering time spent on maintenance than innovation
+
+Security Fixes vs Upstream Acceptance
+-------------------------------------
+What it means:
+Not all security-related changes are acceptable to the open-source community.
+
+Why it’s a challenge:
+	=> Community prefers generic fixes
+	=> Organization-specific security rules are usually rejected
+
+Impact:
+	=> Need to maintain two versions:
+	=> A strict internal fix
+	=> A generalized upstream fix
+
+
+Limited Maintainer Review Bandwidth
+-----------------------------------
+What it means:
+Spinnaker is community-maintained, not a commercial product with SLAs.
+
+Why it’s a challenge:
+	=> PR reviews depend on volunteer availability
+	=> Feedback may arrive late or in multiple rounds
+
+Impact:
+	=> PRs remain open for weeks or months
+	=> Your internal timeline cannot wait for upstream
+
+Backward Compatibility Requirements
+-----------------------------------
+What it means
+Spinnaker strongly avoids breaking existing users.
+
+Why it’s a challenge:
+
+	=> Changes must be:
+		- Optional
+		- Config-driven
+		- Backward compatible
+
+Impact:
+	=> Extra development effort
+	=> Additional design and testing before acceptance
+
+
+Testing & CI Mismatch
+----------------------
+What it means
+Your testing environment is optimized for your setup; upstream CI tests broader scenarios.
+
+Why it’s a challenge:
+	=> Tests passing internally may fail upstream
+	=> Additional test cases may be required
+
+Impact:
+	=> Longer PR cycles
+	=> Rework to meet upstream standards
+
+Legal and IP Review Constraints
+-------------------------------
+What it means
+Every upstream contribution may require legal approval.
+
+Why it’s a challenge:
+	=> Need to remove internal references
+	=> Ensure Apache 2.0 compliance
+
+Impact:
+	=> Contribution delays unrelated to engineering
+	=> Missed upstream release windows
+
+Dependency & Image Build Differences
+------------------------------------
+
+What it means
+You build hardened container images, while upstream focuses only on source code.
+
+Why it’s a challenge:
+	=> Docker or base-image changes aren’t accepted upstream
+	=> Fixes must be expressed as code-level changes
+
+Impact:
+	=> Duplicate work
+	=> Separate pipelines for internal and OSS builds
+
+Release Dependency Risk
+-----------------------
+What it means
+Tying internal releases to upstream acceptance is risky.
+
+Why it’s a challenge:
+	=> Upstream merge timing is unpredictable
+	=> Maintainers may defer or reject changes
+
+Impact:
+	=> Internal release delays
+	=> Pressure to cut corners or skip upstreaming
+	
+	
+Below is a clear, actionable summary of best practices you can follow to avoid the challenges we discussed and still achieve smooth, predictable releases while staying close to the latest Open Source Spinnaker.
+
+This is written as a practical operating model, not theory.
+
+
+Best Practices for Smooth Spinnaker Fork Releases
+
+(While Staying Aligned with Open Source)
+
+
+Keep a “Thin Fork” (Most Important)
+------------------------------------
+What to do:
+Minimize changes to Spinnaker core services (orca, clouddriver, gate, etc.)
+
+Prefer:
+	- Plugins
+	- Extension points
+	- Configuration-based behavior
+
+Why it helps:
+	- Reduces merge conflicts
+	- Makes upgrades to newer OSS versions easier
+	- Limits fork drift
+
+Rule of thumb:
+	- If a change can be done via plugin or config, do not touch core code.
+
+
+Split Changes into 3 Clear Buckets
+----------------------------------
+This avoids confusion and delays.
+
+ChangeType					How to Handle
+------						--------------	
+CVE / dependency fixes		Upstream immediately
+Generic improvements		Upstream early (small PRs)
+Org-specific features		Fork-only, well-isolated
+
+Why it helps:
+	- Prevents wasted effort upstreaming rejected changes
+	- Keeps internal releases independent
+
+Decouple Internal Releases from Upstream Merges
+-----------------------------------------------
+What to do:
+	- Release your forked Spinnaker when it’s ready
+	- Upstream changes asynchronously
+
+Why it helps:
+	- No internal release blockers
+	- No pressure from OSS timelines
+
+Golden rule:
+	Never block an internal release waiting for upstream approval.
+
+Rebase Frequently Against Upstream
+----------------------------------
+What to do:
+	- Sync with upstream weekly or biweekly
+	- Don’t wait for major OSS releases
+
+Why it helps:
+	- Keeps diffs small
+	- Easier conflict resolution
+	- Reduces fork drift
+
+Use Feature Flags & Config-Driven Changes
+-----------------------------------------
+What to do:
+	- All behavior changes should be:
+		- Disabled by default
+		- Controlled by config flags
+
+Why it helps:
+	- Maintainers accept PRs faster
+	- Backward compatibility is preserved
+	- Internal and OSS needs both satisfied
+
+Upstream in Small, Focused PRs
+------------------------------
+What to do:
+	- One feature or fix per PR
+	- Avoid large, multi-service changes
+
+Why it helps:
+	- Faster reviews
+	- Lower rework
+	- Easier cherry-picking
+
+Prefer Plugins for Custom Behavior
+----------------------------------
+What to do:
+	- Build:
+		- Custom auth
+		- Policy enforcement
+		- Pipeline validation
+
+	- As plugins instead of core patches:
+
+Why it helps:
+	- Plugins survive upgrades
+	- Minimal rebasing effort
+	- Clean separation of concerns
+
+Maintain Clear Fork Governance
+------------------------------
+What to do:
+	- Define:
+		- Code owners per Spinnaker service
+		- What can / cannot be upstreamed
+	- Document fork-only decisions
+
+Why it helps:
+	- Prevents uncontrolled customization
+	- Keeps fork manageable long-term
+
+Align CI with Upstream Early
+----------------------------
+What to do:
+	- Run upstream tests locally/CI
+	- Validate before opening PRs
+
+Why it helps:
+	- Fewer upstream CI failures
+	- Shorter review cycles
+
+Track and Manage Fork Drift Actively
+------------------------------------
+What to do:
+	- Maintain:
+		- Diff size metrics
+		- List of long-lived patches
+	- Review drift quarterly
+
+Why it helps:
+	- Early detection of risky divergence
+	- Planned refactoring instead of emergency rewrites
+
+Release from Tagged Upstream Versions
+-------------------------------------
+What to do:
+	- Base internal releases on official Spinnaker tags
+	- Apply your patches on top
+
+Why it helps:
+	- Predictable upgrades
+	- Clear comparison with OSS
+	- Easier rollback
+
+Treat Security Fixes as First-Class Citizens
+--------------------------------------------
+What to do:
+	- Patch internally first
+	- Upstream sanitized, generic fixes later
+
+Why it helps:
+	- Security is not blocked by OSS
+	- Community still benefits
+	
+Recommended Operating Model (Summary)
+=====================================
+Area			Best Practice
+------			-------------
+Customization	Plugins, not core
+Releases		Independent of upstream
+Upstreaming		Small, early, async
+Rebasing		Frequent
+Governance		Strong ownership
+Drift control	Measured and reviewed
+
+Final One-Line Guidance (For Leadership):
+------------------------------------------
+
+A thin fork, frequent rebases, plugin-based customization, and asynchronous upstreaming are the keys to smooth Spinnaker releases aligned with open source.

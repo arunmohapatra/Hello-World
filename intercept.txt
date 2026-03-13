@@ -1,18 +1,33 @@
 package com.example.kubeproxy;
 
-import okhttp3.*;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 import java.util.Enumeration;
 
+@SpringBootApplication
 @RestController
-public class KubeProxyController {
+public class KubeApiProxyApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(KubeApiProxyApplication.class, args);
+    }
+
+    // Change to your Kubernetes API endpoint
+    private static final String KUBE_API_SERVER = "https://kube-apiserver:6443";
 
     private final OkHttpClient client = new OkHttpClient();
-
-    private static final String KUBE_API = "https://kube-apiserver:6443";
 
     @RequestMapping("/**")
     public ResponseEntity<byte[]> proxy(
@@ -20,18 +35,34 @@ public class KubeProxyController {
             @RequestBody(required = false) byte[] body
     ) throws IOException {
 
+        // Build target URL
         String path = request.getRequestURI();
-
         String query = request.getQueryString();
 
-        String url = KUBE_API + path + (query != null ? "?" + query : "");
+        String url = KUBE_API_SERVER + path;
 
+        if (query != null) {
+            url += "?" + query;
+        }
+
+        // Prepare request body
         RequestBody requestBody = null;
 
         if (body != null && body.length > 0) {
-            requestBody = RequestBody.create(body);
+
+            String contentType = request.getContentType();
+
+            if (contentType == null) {
+                contentType = "application/json";
+            }
+
+            requestBody = RequestBody.create(
+                    body,
+                    MediaType.parse(contentType)
+            );
         }
 
+        // Build outgoing request
         Request.Builder builder = new Request.Builder()
                 .url(url)
                 .method(request.getMethod(), requestBody);
@@ -44,24 +75,31 @@ public class KubeProxyController {
             String headerName = headerNames.nextElement();
 
             if (!headerName.equalsIgnoreCase("host")) {
-
                 builder.header(headerName, request.getHeader(headerName));
             }
         }
 
         Request forwardRequest = builder.build();
 
+        // Call Kubernetes API
         Response response = client.newCall(forwardRequest).execute();
 
-        byte[] responseBody = response.body().bytes();
+        byte[] responseBody;
 
-        return ResponseEntity
-                .status(response.code())
-                .headers(headers -> {
-                    response.headers().forEach(h ->
-                            headers.add(h.getFirst(), h.getSecond())
-                    );
-                })
-                .body(responseBody);
+        if (response.body() != null) {
+            responseBody = response.body().bytes();
+        } else {
+            responseBody = new byte[0];
+        }
+
+        // Build response for kubectl
+        ResponseEntity.BodyBuilder responseBuilder =
+                ResponseEntity.status(response.code());
+
+        response.headers().forEach(header -> {
+            responseBuilder.header(header.getFirst(), header.getSecond());
+        });
+
+        return responseBuilder.body(responseBody);
     }
 }

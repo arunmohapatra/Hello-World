@@ -1,105 +1,73 @@
-package com.example.kubeproxy;
+<dependencies>
 
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-webflux</artifactId>
+    </dependency>
+
+</dependencies>
+
+
+package com.example.kubeproxy;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import jakarta.servlet.http.HttpServletRequest;
-
-import java.io.IOException;
-import java.util.Enumeration;
+import reactor.core.publisher.Mono;
 
 @SpringBootApplication
 @RestController
-public class KubeApiProxyApplication {
+public class KubernetesApiProxyApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(KubeApiProxyApplication.class, args);
+        SpringApplication.run(KubernetesApiProxyApplication.class, args);
     }
 
-    // Change to your Kubernetes API endpoint
+    // Kubernetes API server
     private static final String KUBE_API_SERVER = "https://kube-apiserver:6443";
 
-    private final OkHttpClient client = new OkHttpClient();
+    private final WebClient webClient = WebClient.builder().build();
 
+    /**
+     * Catch all incoming kubectl requests
+     */
     @RequestMapping("/**")
-    public ResponseEntity<byte[]> proxy(
-            HttpServletRequest request,
-            @RequestBody(required = false) byte[] body
-    ) throws IOException {
+    public Mono<Void> proxy(ServerHttpRequest request, ServerHttpResponse response) {
 
-        // Build target URL
-        String path = request.getRequestURI();
-        String query = request.getQueryString();
+        String path = request.getURI().getRawPath();
+        String query = request.getURI().getRawQuery();
 
-        String url = KUBE_API_SERVER + path;
+        String targetUrl = KUBE_API_SERVER + path;
 
         if (query != null) {
-            url += "?" + query;
+            targetUrl += "?" + query;
         }
 
-        // Prepare request body
-        RequestBody requestBody = null;
+        HttpMethod method = request.getMethod();
 
-        if (body != null && body.length > 0) {
+        // Copy headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.addAll(request.getHeaders());
 
-            String contentType = request.getContentType();
+        return webClient
+                .method(method)
+                .uri(targetUrl)
+                .headers(h -> h.addAll(headers))
+                .body(request.getBody(), byte[].class)
+                .exchangeToMono(clientResponse -> {
 
-            if (contentType == null) {
-                contentType = "application/json";
-            }
+                    response.setStatusCode(clientResponse.statusCode());
 
-            requestBody = RequestBody.create(
-                    body,
-                    MediaType.parse(contentType)
-            );
-        }
+                    response.getHeaders().addAll(clientResponse.headers().asHttpHeaders());
 
-        // Build outgoing request
-        Request.Builder builder = new Request.Builder()
-                .url(url)
-                .method(request.getMethod(), requestBody);
-
-        // Forward headers
-        Enumeration<String> headerNames = request.getHeaderNames();
-
-        while (headerNames.hasMoreElements()) {
-
-            String headerName = headerNames.nextElement();
-
-            if (!headerName.equalsIgnoreCase("host")) {
-                builder.header(headerName, request.getHeader(headerName));
-            }
-        }
-
-        Request forwardRequest = builder.build();
-
-        // Call Kubernetes API
-        Response response = client.newCall(forwardRequest).execute();
-
-        byte[] responseBody;
-
-        if (response.body() != null) {
-            responseBody = response.body().bytes();
-        } else {
-            responseBody = new byte[0];
-        }
-
-        // Build response for kubectl
-        ResponseEntity.BodyBuilder responseBuilder =
-                ResponseEntity.status(response.code());
-
-        response.headers().forEach(header -> {
-            responseBuilder.header(header.getFirst(), header.getSecond());
-        });
-
-        return responseBuilder.body(responseBody);
+                    return response.writeWith(clientResponse.bodyToFlux(org.springframework.core.io.buffer.DataBuffer.class));
+                });
     }
 }

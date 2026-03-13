@@ -1,0 +1,67 @@
+package com.example.kubeproxy;
+
+import okhttp3.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.util.Enumeration;
+
+@RestController
+public class KubeProxyController {
+
+    private final OkHttpClient client = new OkHttpClient();
+
+    private static final String KUBE_API = "https://kube-apiserver:6443";
+
+    @RequestMapping("/**")
+    public ResponseEntity<byte[]> proxy(
+            HttpServletRequest request,
+            @RequestBody(required = false) byte[] body
+    ) throws IOException {
+
+        String path = request.getRequestURI();
+
+        String query = request.getQueryString();
+
+        String url = KUBE_API + path + (query != null ? "?" + query : "");
+
+        RequestBody requestBody = null;
+
+        if (body != null && body.length > 0) {
+            requestBody = RequestBody.create(body);
+        }
+
+        Request.Builder builder = new Request.Builder()
+                .url(url)
+                .method(request.getMethod(), requestBody);
+
+        // Forward headers
+        Enumeration<String> headerNames = request.getHeaderNames();
+
+        while (headerNames.hasMoreElements()) {
+
+            String headerName = headerNames.nextElement();
+
+            if (!headerName.equalsIgnoreCase("host")) {
+
+                builder.header(headerName, request.getHeader(headerName));
+            }
+        }
+
+        Request forwardRequest = builder.build();
+
+        Response response = client.newCall(forwardRequest).execute();
+
+        byte[] responseBody = response.body().bytes();
+
+        return ResponseEntity
+                .status(response.code())
+                .headers(headers -> {
+                    response.headers().forEach(h ->
+                            headers.add(h.getFirst(), h.getSecond())
+                    );
+                })
+                .body(responseBody);
+    }
+}
